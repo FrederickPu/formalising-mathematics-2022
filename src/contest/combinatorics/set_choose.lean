@@ -194,7 +194,7 @@ exact λ hx, j x hx,
 end
 
 lemma card_eq_one_iff_singleton  (s : set ℕ): 
-# s = ↑1 → ∃ n, {n} = s :=
+# s = 1 → ∃ n, {n} = s :=
 begin
 simp [cardinal.eq_one_iff_unique],
 rintros h h1,
@@ -227,16 +227,9 @@ rw ← q, simp, exact p,
 
 simp [set_choose],
 intros h p,
-have :  ∃ (x : ℕ), x ∈ s,
-{
-  by_contradiction h1,
-  simp at h1,
-  simp [set.eq_empty_iff_forall_not_mem.mpr h1] at p,
-  exact p,
-},
-cases this with x hx,
+cases card_eq_one_iff_singleton s p with x hx,
 use x,
-split,
-exact h hx,
-
+simp [hx],
+simp [← hx] at h,
+exact h,
 end 
