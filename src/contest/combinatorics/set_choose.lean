@@ -168,3 +168,75 @@ split,
 end
 
 #check cardinal.mk_to_nat_eq_card
+
+
+lemma equiv_singleton_iff_singleton  (s : set ℕ): 
+↥({n}:set ℕ) ≃ s → ∃ m, {m} = s :=
+begin
+intro p, cases p,
+
+have : n ∈ ({n}:set ℕ) := set.mem_singleton n,
+use (p_to_fun ⟨n, this⟩).val,
+
+have j : ∀ m : ℕ, m ∈ s → m = (p_to_fun ⟨n, this⟩).val,
+{
+intros m hm,
+suffices g : p_inv_fun ⟨m, hm⟩ = ⟨n, this⟩,
+rw [← g, p_right_inv ⟨m, hm⟩],
+
+simp only [eq_iff_true_of_subsingleton],
+},
+
+ext x, simp,
+split,
+exact λ u, by {rw u, exact (p_to_fun ⟨n, this⟩).property},
+exact λ hx, j x hx,
+end
+
+lemma card_eq_one_iff_singleton  (s : set ℕ): 
+# s = ↑1 → ∃ n, {n} = s :=
+begin
+simp [cardinal.eq_one_iff_unique],
+rintros h h1,
+cases h1 with x hx,
+use x,
+
+ext y,
+simp,
+split,
+intro p, rw p, exact hx,
+intro p, exact (h hx p).symm,
+end
+
+example : # (set_choose n 1) = ↑n := 
+begin
+rw ← cardinal.mk_pfin n,
+apply cardinal.mk_congr,
+have l := equiv.set.image_of_inj_on (λ n : ℕ,  {n}) [n],
+suffices : ((λ (n : ℕ), {n}) '' [n]) = set_choose n 1,
+rw ← this, 
+symmetry, apply l,
+intros a ha b hb,
+simp,
+
+ext s,
+split,
+simp [set_choose],
+intros x p q,
+rw ← q, simp, exact p,
+
+simp [set_choose],
+intros h p,
+have :  ∃ (x : ℕ), x ∈ s,
+{
+  by_contradiction h1,
+  simp at h1,
+  simp [set.eq_empty_iff_forall_not_mem.mpr h1] at p,
+  exact p,
+},
+cases this with x hx,
+use x,
+split,
+exact h hx,
+
+end 
