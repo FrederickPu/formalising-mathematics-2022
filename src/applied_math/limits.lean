@@ -47,3 +47,14 @@ linarith [min_le_right δ1 δ2],
 linarith,
 },
 end
+
+example : ∀ a, limit a (λ x, x) a :=
+begin
+intros x ε he,
+use ε,
+split,
+exact he,
+intros x1 h,
+simp [← abs_sub_comm x1 x],
+exact h.right,
+end
