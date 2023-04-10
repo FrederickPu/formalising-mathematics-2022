@@ -38,6 +38,94 @@ structure tarski_geo (M α : Type)
 
 namespace tarski_geo
 
+-- a term is either a statement of congruence or betweeness or equality
+
+structure term_cong {M α : Type} [add_semigroup M] [linear_order M] [densely_ordered M] 
+(T : tarski_geo M α) : Type :=
+(aindex : ℕ)
+(bindex : ℕ)
+(cindex : ℕ)
+(dindex : ℕ)
+
+structure term_bet {M α : Type} [add_semigroup M] [linear_order M] [densely_ordered M] 
+(T : tarski_geo M α) : Type :=
+(xindex : ℕ)
+(yindex : ℕ)
+(zindex : ℕ)
+
+structure term_eq {M α : Type} [add_semigroup M] [linear_order M] [densely_ordered M] 
+(T : tarski_geo M α) : Type :=
+(aindex : ℕ)
+(bindex : ℕ)
+
+inductive term {M α : Type} [add_semigroup M] [linear_order M] [densely_ordered M] 
+(T : tarski_geo M α) : Type
+| mk_bet (bet : term_bet T) : term
+| mk_cong (cong : term_cong T) : term
+| mk_eq (eq : term_eq T) : term
+
+
+-- a proof state consists of:
+-- varindex is the number of free variables (a0 a1 a2 ... aindex)
+-- a list of terms
+structure proof_state {M α : Type} [add_semigroup M] [linear_order M] [densely_ordered M] 
+(T : tarski_geo M α) : Type :=
+(varindex : ℕ) 
+(terms : list (term T))
+
+inductive inference {M α : Type} [add_semigroup M] [linear_order M] [densely_ordered M] 
+(T : tarski_geo M α) : Type
+| cong_refl (xi yi : ℕ) : inference -- indices of variables x and y
+| cong_id (xi yi zi : ℕ) : inference
+| cong_trans (xi yi zi ui vi wi : ℕ) (congxyzu congxyvw : ℕ) : inference -- indices variables and precedent terms
+| bet_id (xi yi : ℕ) (betxyx : ℕ) : inference
+| ax_pasch (xi yi zi ui vi : ℕ) (betxuz betyvz : ℕ): inference
+| seg_con (xi yi ai bi : ℕ): inference
+
+-- match statement simple example
+-- def f (x : ℕ) : ℕ :=
+-- match x with 
+-- | m+1 := m
+-- | 0 := 0
+-- end
+
+-- we need to include ff case for when the hypothesis don't line up
+def apply_inference {M α : Type} [add_semigroup M] [linear_order M] [densely_ordered M] 
+(T : tarski_geo M α) (ps : proof_state T) (i : inference T) : proof_state T :=
+do
+let var_temp : ℕ × list (term T) :=
+match i with
+| inference.cong_refl xi yi := ⟨ps.varindex, [term.mk_cong ⟨xi, yi, yi, xi⟩]⟩
+| inference.cong_id xi yi zi := ⟨ps.varindex, [term.mk_cong ⟨xi, yi, zi, zi⟩]⟩
+| inference.cong_trans xi yi zi ui vi wi congxyzu congxyvw := ⟨ps.varindex, [term.mk_cong ⟨zi, ui, vi, wi⟩]⟩
+| inference.bet_id xi yi betxyx := ⟨ps.varindex, [term.mk_eq ⟨xi, yi⟩]⟩
+| inference.ax_pasch xi yi zi ui vi betxuz betyvz := ⟨ps.varindex + 1, [term.mk_bet ⟨yi, (ps.varindex + 1), ui⟩, term.mk_bet ⟨vi, (ps.varindex + 1), xi⟩]⟩ --  ∃ a, (H.B y a u ∧ H.B v a x)
+| inference.seg_con xi yi ai bi := ⟨ps.varindex + 1, [term.mk_bet ⟨xi, yi, (ps.varindex + 1)⟩, term.mk_cong ⟨yi, (ps.varindex + 1), ai, bi⟩]⟩ -- ∃z, H.B x y z ∧ H.cong y z a b
+end,
+let var := var_temp.fst,
+let temp := var_temp.snd,
+⟨var, temp⟩
+
+structure proof {M α : Type} [add_semigroup M] [linear_order M] [densely_ordered M] 
+(T : tarski_geo M α) :=
+(initial_hyp : proof_state T)
+(inferences : list (inference T))
+
+-- simple Prop & proof conversion test:
+-- n : ℕ gets mapped to the proof that n * x = n*x 
+-- ex 3 -> 3*x = 3*x
+  -- def toProp (n : ℕ) := ∀x, n*x = n*x 
+
+    --notice  this is a dependent type since output type depends on n
+  -- def toPropProof (n : ℕ) : toProp n :=
+  -- begin
+  -- intro x,
+  -- refl,
+  -- end
+
+-- now let's do it for the tarksi geometry
+
+
 def cong' {M α : Type} [add_semigroup M] [linear_order M] [densely_ordered M] 
 (T : tarski_geo M α) (a b c a' b' c' : α) := 
 T.H.cong a b a' b' ∧ T.H.cong b c b' c' ∧ T.H.cong a c a' c'
@@ -74,14 +162,37 @@ end
 -- proving basic properties of betweeness
 theorem bet_symm {x y z : α} : T.H.B x y z → T.H.B z y x:=
 begin
-cases T.seg_con y x x x,
+-- let X  be region in the linesegment xy
+-- let Y  be region in the linesegment yz
+-- according to continuity axiom with (Y, X) a = z and b = y
+-- this gives the desired result
+let X := λ p, T.H.B y p x,
+let Y := λ p, T.H.B z p y,
+have := T.ax_cont Y X,
 
+have : ∃ (a : α), ∀ (x y : α), (Y x ∧ X y → T.H.B a x y),
+{
+  use z,
+  intros y1 x1,
+  simp [X, Y],
+  intros p q,
+  have := T.ax_pasch,
+}
 end
 theorem bet_refl {x y : α} : T.H.B x x y :=
 begin
-cases T.seg_con x x x x,
-have := T.cong_id x w x h.right,
-rw ← this at h,
+-- we can use the axiom of continuity
+-- use the sets: {x} and {x, y}
+-- and place a at point x
+-- then there exists b such that B x b x and B x b y
+-- (sketch : a ... x ... b ... x ... y)
+-- B x b x gives us x = b
+-- and substitute into B x b y to get B x x y
+have := T.ax_cont (λ p, p = x) (λ p, p = x ∨ p = y),
+cases T.seg_con y x x x with z hz,
+cases hz,
+have := T.cong_id x z x hz_right,
+rw ← this at hz_left,
 end
 
 theorem exists_midpoint : ∃ (P Q R : α), T.H.B P Q R ∧ T.H.cong P Q Q R :=
