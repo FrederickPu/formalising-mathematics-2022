@@ -18,7 +18,7 @@ structure tarski_geo (M α : Type)
 (bet_id (x y : α) : H.B x y x → x = y)
 (ax_pasch (x y z u v : α) : (H.B x u z ∧ H.B y v z) → ∃ a, (H.B y a u ∧ H.B v a x))
 (ax_cont (φ ψ : α → Prop): 
-∃ a : α, (∀ x, ∀y, ((φ x ∧ ψ y) → H.B a x y) →  (∃ b,∀x,∀y,((φ(x) ∧ ψ(y)) → H.B x b y))) 
+(∃ a : α, ∀ x, ∀y, ((φ x ∧ ψ y) → H.B a x y)) →  (∃ b,∀x,∀y,((φ(x) ∧ ψ(y)) → H.B x b y))
 )-- axiom of continuity
 (low_dim : ∃ a b c, ¬H.B a b c ∧ ¬ H.B b c a ∧ ¬ H.B c a b)
 (cong_bet (x y z u v : α): 
@@ -28,7 +28,6 @@ structure tarski_geo (M α : Type)
 (five_seg (x y z u x' y' z' u' : α) :
 (x ≠ y ∧ H.B x y z ∧ H.B x' y' z' ∧ H.cong x y x' y' ∧ H.cong y z y' z' ∧ H.cong x u x' u' ∧ H.cong y u y' u') → H.cong z u z' u')
 (seg_con (x y a b : α): ∃z, H.B x y z ∧ H.cong y z a b)
-
 -- congruence for triangles
 -- def tarski_geo.cong' {M α : Type} [add_semigroup M] [linear_order M] [densely_ordered M] {T : tarski_geo M α}
 -- (a b c a' b' c' : α) := 
@@ -160,56 +159,32 @@ exact q,
 end
 
 -- proving basic properties of betweeness
+theorem bet_triv {x y: α} : T.H.B x y y :=
+begin
+cases T.seg_con x y y y with y1,
+have : y = y1, apply T.cong_id y y1 y,
+exact h.right,
+rw ← this at h,
+exact h.left,
+end
 theorem bet_symm {x y z : α} : T.H.B x y z → T.H.B z y x:=
 begin
--- let X  be region in the linesegment xy
--- let Y  be region in the linesegment yz
--- according to continuity axiom with (Y, X) a = z and b = y
--- this gives the desired result
-let X := λ p, T.H.B y p x,
-let Y := λ p, T.H.B z p y,
-have := T.ax_cont Y X,
+intro h,
+have : T.H.B y z z := bet_triv,
+have : ∃ u, T.H.B y u y ∧ T.H.B z u x,
+apply T.ax_pasch x y z,
+tauto,
 
-have : ∃ (a : α), ∀ (x y : α), (Y x ∧ X y → T.H.B a x y),
-{
-  use z,
-  intros y1 x1,
-  simp [X, Y],
-  intros p q,
-  have := T.ax_pasch,
-}
-end
-theorem bet_refl {x y : α} : T.H.B x x y :=
-begin
--- we can use the axiom of continuity
--- use the sets: {x} and {x, y}
--- and place a at point x
--- then there exists b such that B x b x and B x b y
--- (sketch : a ... x ... b ... x ... y)
--- B x b x gives us x = b
--- and substitute into B x b y to get B x x y
-have := T.ax_cont (λ p, p = x) (λ p, p = x ∨ p = y),
-cases T.seg_con y x x x with z hz,
-cases hz,
-have := T.cong_id x z x hz_right,
-rw ← this at hz_left,
+cases this with u,
+have : y = u, apply T.bet_id, exact this_h.left,
+rw this,
+exact this_h.right,
 end
 
-theorem exists_midpoint : ∃ (P Q R : α), T.H.B P Q R ∧ T.H.cong P Q Q R :=
+theorem bet_triv' {x y : α} : T.H.B x x y :=
 begin
-rcases T.low_dim with ⟨a, ⟨b, ⟨c, h⟩⟩⟩,
-
--- c ----> a ----> z ----> w
--- az and zw are both of length bc
-cases T.seg_con c a b c with z h1, 
-cases T.seg_con a z b c with w h2,
-use a, use z, use w,
-
-split,
-  exact h2.left,
-
-  have := cong_symm h2.right,
-  exact cong_trans' h1.right this,
+apply bet_symm,
+exact bet_triv,
 end
 
 -- exists perpindicular biscetor 
@@ -229,6 +204,17 @@ cases T.seg_con b a b c with b1 hb1,
 cases T.seg_con a b1 b c with b2 hb2,
 
 have := T.ax_pasch c2 b2 a c1 b1,
+have : ∃ (u : α), T.H.B b2 u c1 ∧ T.H.B b1 u c2,
+apply T.ax_pasch _ _ a,
+split,
+apply bet_symm, exact hc2.left,
+apply bet_symm, exact hb2.left,
+
+cases this with u hu,
+have : ∃ u1, T.H.B b2 u1 c2 ∧ T.H.B a u u1,
+let X := λ p, ∃ q, T.H.B a q p ∧ T.H.B u q c2,
+let Y := λ p, ∃ q, T.H.B a q p ∧ T.H.B u q b2,
+have : ∃ (b : α), ∀ (x y : α), X x ∧ Y y → T.H.B x b y,
 end
 
 end tarski_geo
