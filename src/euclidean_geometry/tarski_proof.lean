@@ -202,7 +202,7 @@ instance : has_repr term :=
 def list.vars_repr : list string → string
 | list.nil := ""
 | (list.cons hd tl) :=  
-if tl = list.nil then hd
+if tl = list.nil then hd -- avoiding trailing comma "a, b,"
 else hd ++  ", " ++ list.vars_repr tl
 
 instance : has_repr proof_state :=
