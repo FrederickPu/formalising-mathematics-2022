@@ -248,26 +248,30 @@ infixr ` × `:35 := list.product
 -- all inferences that can be applied to a given proof state
 -- some of them may be invalid (ie apply_inference ps i = none)
 def proof_state.infs (ps : proof_state) : list inference := 
-do 
-let varsi := list.range ps.numvars,
-let termsi := list.range ps.numterms,
+  do 
+  let varsi := list.range ps.numvars,
+  let termsi := list.range ps.numterms,
 
-let cong_refl : list inference := (varsi × termsi).map (λ v : ℕ × ℕ, inference.cong_refl v),
-let cong_trans : list inference := 
-  ((varsi × varsi × varsi × varsi × varsi × varsi) × (termsi × termsi)).map 
-        (λ v : (ℕ × ℕ × ℕ × ℕ × ℕ × ℕ) × (ℕ × ℕ), inference.cong_trans v.fst v.snd),
-let bet_id : list inference := 
-  ((varsi × varsi) × (termsi)).map
-        (λ v : (ℕ × ℕ) × ℕ, inference.bet_id v.fst v.snd),
-let ax_pasch : list inference :=
-  ((varsi × varsi × varsi × varsi × varsi) × (termsi × termsi)).map
-        (λ v : (ℕ × ℕ × ℕ × ℕ × ℕ) × (ℕ × ℕ), inference.ax_pasch v.fst v.snd),
-let seg_con : list inference :=
-  (varsi × varsi × varsi × varsi).map
-        (λ v : (ℕ × ℕ × ℕ × ℕ), inference.seg_con v.fst),
+  let cong_refl : list inference := (varsi × termsi).map (λ v : ℕ × ℕ, inference.cong_refl v),
+  let cong_trans : list inference := 
+    ((varsi × varsi × varsi × varsi × varsi × varsi) × (termsi × termsi)).map 
+          (λ v : (ℕ × ℕ × ℕ × ℕ × ℕ × ℕ) × (ℕ × ℕ), inference.cong_trans v.fst v.snd),
+  let bet_id : list inference := 
+    ((varsi × varsi) × (termsi)).map
+          (λ v : (ℕ × ℕ) × ℕ, inference.bet_id v.fst v.snd),
+  let ax_pasch : list inference :=
+    ((varsi × varsi × varsi × varsi × varsi) × (termsi × termsi)).map
+          (λ v : (ℕ × ℕ × ℕ × ℕ × ℕ) × (ℕ × ℕ), inference.ax_pasch v.fst v.snd),
+  let seg_con : list inference :=
+    (varsi × varsi × varsi × varsi).map
+          (λ v : (ℕ × ℕ × ℕ × ℕ), inference.seg_con v.fst),
 
-cong_refl ++ cong_trans ++ bet_id ++ ax_pasch ++ seg_con
+  cong_refl ++ cong_trans ++ bet_id ++ ax_pasch ++ seg_con
 
+-- get all inferences that are actually valid
+-- are not `none`
+def proof_state.valid_infs (ps : proof_state) : list inference :=
+  ps.infs.filter (λ i : inference, ! option.is_none (apply_inference ps i))
 
 #eval conclusion thing.initial_hyp thing.inferences
 
