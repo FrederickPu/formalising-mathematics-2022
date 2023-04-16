@@ -1,4 +1,5 @@
 import tactic
+import data.vector
 -- creating a type of proofs inside a tarski geometry
 -- the goal is to create a clean interface for automatic proof search (not just rewrite search)
 
@@ -170,3 +171,37 @@ def thing : proof :=
   initial_hyp := ⟨2, 0, array.nil⟩,
   inferences := [inference.cong_refl 0 1]
 }
+
+#eval has_repr.repr 2
+
+
+def naming_convention : list string := ["a", "b", "c", "d", "x", "y", "z"]
+#eval naming_convention.to_array
+
+-- variable name assigned to a particular (natural number) variable index
+def nname : ℕ → string := 
+λ n, do
+  let lookup := naming_convention.to_array,
+  let len := naming_convention.length,
+  if h : n < len then lookup.read ⟨n, h⟩
+  else repr n
+
+instance : has_repr term :=
+{
+  repr := λ t, 
+  match t with 
+  | term.mk_bet (bet : term_bet) := 
+     "B" ++ " " ++ (nname bet.xindex) ++ " " ++ (nname bet.yindex) ++ " " ++ (nname bet.zindex)
+  | term.mk_cong (cong : term_cong) :=
+  (nname cong.aindex) ++ " " ++ (nname cong.bindex) ++ " ≅ " ++ (nname cong.cindex) ++ " " ++ (nname cong.dindex)
+  | term.mk_eq (eq : term_eq) :=
+  (nname eq.aindex) ++ " = " ++ (nname eq.bindex)
+  end
+}
+
+instance : has_repr proof_state :=
+{
+  repr := λ ps, repr ps.terms
+}
+
+#eval conclusion thing.initial_hyp thing.inferences
