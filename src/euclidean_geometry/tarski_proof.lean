@@ -37,12 +37,12 @@ structure proof_state : Type :=
 (terms : array numterms term)
 
 inductive inference : Type
-| cong_refl (xi yi : ℕ) : inference -- indices of variables x and y
-| cong_id (xi yi zi : ℕ) (congxyzz : ℕ) : inference
-| cong_trans (xi yi zi ui vi wi : ℕ) (congxyzu congxyvw : ℕ) : inference -- indices variables and precedent terms
-| bet_id (xi yi : ℕ) (betxyx : ℕ) : inference
-| ax_pasch (xi yi zi ui vi : ℕ) (betxuz betyvz : ℕ): inference
-| seg_con (xi yi ai bi : ℕ): inference
+| cong_refl (xyi : ℕ × ℕ) : inference -- indices of variables x and y
+| cong_id (xyzi: ℕ × ℕ × ℕ) (congxyzz : ℕ) : inference
+| cong_trans (xyzuvwi : ℕ × ℕ × ℕ × ℕ × ℕ × ℕ) (congxyzucongxyvw : ℕ × ℕ) : inference -- indices variables and precedent terms
+| bet_id (xyi: ℕ × ℕ) (betxyx : ℕ) : inference
+| ax_pasch (xyzuv : ℕ × ℕ × ℕ × ℕ × ℕ) (betxuzbetyvz : ℕ × ℕ): inference
+| seg_con (xyab : ℕ × ℕ × ℕ × ℕ): inference
 
 -- match statement simple example
 -- def f (x : ℕ) : ℕ :=
@@ -84,12 +84,16 @@ end
 def apply_inference (ps : proof_state) (i : inference) : option proof_state :=
 do
 match i with
-| inference.cong_refl xi yi := some ⟨ 
+| inference.cong_refl xyi := some ⟨ 
   ps.numvars, 
   ps.numterms + 1, 
-  ps.terms.push_back (term.mk_cong ⟨xi, yi, yi, xi⟩)
+  match xyi with
+  | (xi, yi) := ps.terms.push_back (term.mk_cong ⟨xi, yi, yi, xi⟩)
+  end
   ⟩
-| inference.cong_id xi yi zi congxyzz := 
+| inference.cong_id xyzi congxyzz := 
+match xyzi with
+| (xi, (yi, zi)) := 
 if h : congxyzz < ps.numterms
 then if is_cong xi yi zi zi (ps.terms.read ⟨congxyzz, h⟩)
     then some ⟨
@@ -99,45 +103,58 @@ then if is_cong xi yi zi zi (ps.terms.read ⟨congxyzz, h⟩)
       ⟩
     else none
 else none
-| inference.cong_trans xi yi zi ui vi wi congxyzu congxyvw := 
-if h : congxyzu < ps.numterms 
-then if is_cong xi yi zi ui (ps.terms.read ⟨congxyzu, h⟩)
-     then some ⟨
-      ps.numvars, 
-      ps.numterms + 1, 
-      ps.terms.push_back (term.mk_cong ⟨zi, ui, vi, wi⟩) 
-      ⟩
-     else none
-else none
-| inference.bet_id xi yi betxyx := 
-if h : betxyx < ps.numterms
-then if is_bet xi yi xi (ps.terms.read ⟨betxyx, h⟩)
-     then some ⟨
-      ps.numvars,
-      ps.numterms + 1,
-      ps.terms.push_back (term.mk_eq ⟨xi, yi⟩)
-      ⟩
+end
+| inference.cong_trans xyzuvwi congxyzucongxyvwi := 
+match xyzuvwi, congxyzucongxyvwi with
+  | (xi, (yi, (zi, (ui, (vi, wi))))), (congxyzu, congxyvw) :=
+  if h : congxyzu < ps.numterms 
+  then if is_cong xi yi zi ui (ps.terms.read ⟨congxyzu, h⟩)
+      then some ⟨
+        ps.numvars, 
+        ps.numterms + 1, 
+        ps.terms.push_back (term.mk_cong ⟨zi, ui, vi, wi⟩) 
+        ⟩
       else none
-else none
-| inference.ax_pasch xi yi zi ui vi betxuz betyvz := --  ∃ a, (H.B y a u ∧ H.B v a x)
-if h : betxuz < ps.numterms ∧ betyvz < ps.numterms
-then if is_bet xi ui zi (ps.terms.read ⟨betxuz, h.left⟩) ∧ is_bet yi vi zi (ps.terms.read ⟨betyvz, h.right⟩)
-     then some ⟨
-      ps.numvars + 1,
-      ps.numterms + 2, 
-      do 
-        let temp := ps.terms.push_back (term.mk_bet ⟨yi, (ps.numvars + 1), ui⟩),
-        temp.push_back (term.mk_bet ⟨vi, (ps.numvars + 1), xi⟩)
-      ⟩
-     else none
-else none
-| inference.seg_con xi yi ai bi := -- ∃z, H.B x y z ∧ H.cong y z a b
-some ⟨
-  ps.numvars + 1,
-  ps.numterms + 2,
-  do let temp := ps.terms.push_back (term.mk_bet ⟨xi, yi, (ps.numvars + 1)⟩),
-  temp.push_back (term.mk_cong ⟨yi, (ps.numvars + 1), ai, bi⟩)
-⟩
+  else none
+  end
+| inference.bet_id xyi betxyx := 
+  match xyi with
+  | (xi, yi) :=
+  if h : betxyx < ps.numterms
+  then if is_bet xi yi xi (ps.terms.read ⟨betxyx, h⟩)
+      then some ⟨
+        ps.numvars,
+        ps.numterms + 1,
+        ps.terms.push_back (term.mk_eq ⟨xi, yi⟩)
+        ⟩
+        else none
+  else none
+  end
+| inference.ax_pasch xyzuvi betxuzbetyvz := --  ∃ a, (H.B y a u ∧ H.B v a x)
+  match xyzuvi, betxuzbetyvz with 
+  | (xi, (yi, (zi, (ui, vi)))), (betxuz, betyvz) :=
+  if h : betxuz < ps.numterms ∧ betyvz < ps.numterms
+  then if is_bet xi ui zi (ps.terms.read ⟨betxuz, h.left⟩) ∧ is_bet yi vi zi (ps.terms.read ⟨betyvz, h.right⟩)
+      then some ⟨
+        ps.numvars + 1,
+        ps.numterms + 2, 
+        do 
+          let temp := ps.terms.push_back (term.mk_bet ⟨yi, (ps.numvars + 1), ui⟩),
+          temp.push_back (term.mk_bet ⟨vi, (ps.numvars + 1), xi⟩)
+        ⟩
+      else none
+  else none
+  end
+| inference.seg_con xyabi := -- ∃z, H.B x y z ∧ H.cong y z a b
+  match xyabi with
+  | (xi, (yi, (ai, bi))) :=
+  some ⟨
+    ps.numvars + 1,
+    ps.numterms + 2,
+    do let temp := ps.terms.push_back (term.mk_bet ⟨xi, yi, (ps.numvars + 1)⟩),
+    temp.push_back (term.mk_cong ⟨yi, (ps.numvars + 1), ai, bi⟩)
+  ⟩
+  end
 end
 
 structure proof : Type :=
@@ -174,7 +191,7 @@ def conclusion (initial : proof_state):  list inference → option proof_state
 def thing : proof :=
 {
   initial_hyp := ⟨2, 0, array.nil⟩,
-  inferences := [inference.cong_refl 0 1, inference.seg_con 0 1 0 1]
+  inferences := [inference.cong_refl (0, 1), inference.seg_con (0, 1, 0, 1)]
 }
 
 #eval has_repr.repr 2
@@ -215,4 +232,81 @@ instance : has_repr proof_state :=
   repr := λ ps, ((list.range ps.numvars).map nname).vars_repr ++ " ⊢ " ++  (repr ps.terms)
 }
 
+structure search_state (α : Type):= 
+(parent : α → option α)
+(visited : α → bool)
+
+def test := [1, 2, 3]
+def f (n : ℕ) : option ℕ :=
+if n > 2 then n
+else none
+
+-- we want to be able to generate a list of all pairs of (xi, yi) or a list of all (xi, yi, zi) in order to iterate over all possible inferences of a given kind (ex bet_id)
+-- let's create a infix macro for list.product
+infixr ` × `:35 := list.product
+
+-- all inferences that can be applied to a given proof state
+-- some of them may be invalid (ie apply_inference ps i = none)
+def proof_state.infs (ps : proof_state) : list inference := 
+do 
+let varsi := list.range ps.numvars,
+let termsi := list.range ps.numterms,
+
+let cong_refl : list inference := (varsi × termsi).map (λ v : ℕ × ℕ, inference.cong_refl v),
+let cong_trans : list inference := 
+  ((varsi × varsi × varsi × varsi × varsi × varsi) × (termsi × termsi)).map 
+        (λ v : (ℕ × ℕ × ℕ × ℕ × ℕ × ℕ) × (ℕ × ℕ), inference.cong_trans v.fst v.snd),
+let bet_id : list inference := 
+  ((varsi × varsi) × (termsi)).map
+        (λ v : (ℕ × ℕ) × ℕ, inference.bet_id v.fst v.snd),
+let ax_pasch : list inference :=
+  ((varsi × varsi × varsi × varsi × varsi) × (termsi × termsi)).map
+        (λ v : (ℕ × ℕ × ℕ × ℕ × ℕ) × (ℕ × ℕ), inference.ax_pasch v.fst v.snd),
+let seg_con : list inference :=
+  (varsi × varsi × varsi × varsi).map
+        (λ v : (ℕ × ℕ × ℕ × ℕ), inference.seg_con v.fst),
+
+cong_refl ++ cong_trans ++ bet_id ++ ax_pasch ++ seg_con
+
+
 #eval conclusion thing.initial_hyp thing.inferences
+
+def inference.repr : inference → string
+| (inference.cong_refl xyi) := 
+  match xyi with
+  | (xi, yi) := " ⊢ " ++ repr (term.mk_cong ⟨xi, yi, yi, xi⟩)
+  end
+| (inference.cong_id xyzi congxyzz) := 
+  match xyzi with 
+  | (xi, yi, zi) := repr (term.mk_cong ⟨xi, yi, zi, zi⟩) ++ " ⊢ " ++ repr (term.mk_eq ⟨xi, yi⟩)
+  end
+| (inference.cong_trans xyzuvwi congxyzucongxyvw) := 
+  match xyzuvwi, congxyzucongxyvw with
+  |  (xi, yi, zi, ui, vi, wi), (congxyzu, congxyvw) :=
+  repr (term.mk_cong ⟨xi, yi, zi, ui⟩) ++ ", " ++ repr (term.mk_cong ⟨xi, yi, vi, wi⟩) ++ " ⊢ " ++ repr (term.mk_cong ⟨zi, ui, vi, wi⟩)
+  end
+| (inference.bet_id xyi betxyx) :=
+  match xyi with
+  | (xi, yi) :=
+  repr (term.mk_bet ⟨xi, yi, xi⟩) ++ " ⊢ " ++ repr (term.mk_eq ⟨xi, yi⟩)
+  end
+| (inference.ax_pasch xyzuv betxuzbetyvz) := 
+  match xyzuv, betxuzbetyvz with
+  | (x, y, z, u, v), (betxuz, betyvz) :=
+  repr (term.mk_bet ⟨x, u, z⟩) ++ ", " ++ repr (term.mk_bet ⟨y, v, z⟩) ++ " ⊢ " 
+
+    ++ "B " ++ repr y ++ " ?a " ++ repr u ++ " ∧ " ++ "B " ++ repr v ++ " ?a " ++ repr x
+  end
+| (inference.seg_con xyab) := 
+  match xyab with
+  | (x, y, a, b) := " ⊢ " ++ "B " ++ nname x ++ " " ++ nname y ++ " ?z "  ++ " ∧ " ++ nname y ++ " ?z " ++ " ≅ " ++ nname a ++ " " ++ nname b
+  end
+
+instance : has_repr inference :=
+{
+  repr := inference.repr
+}
+
+#eval thing.initial_hyp.valid_infs
+
+#eval [1, 2, 3] ++ [2, 3, 4]
