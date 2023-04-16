@@ -1,7 +1,11 @@
+import tactic
 -- creating a type of proofs inside a tarski geometry
 -- the goal is to create a clean interface for automatic proof search (not just rewrite search)
 
 -- a term is either a statement of congruence or betweeness or equality
+
+set_option trace.eqn_compiler.elim_match true
+
 structure term_cong : Type :=
 (aindex : ℕ)
 (bindex : ℕ)
@@ -70,7 +74,7 @@ end
 
 def is_bet (xi yi zi : ℕ) (t : term) : bool :=
 match t with
-| term.mk_bet (bet : term_bet) := term_bet.xindex = xi ∧ term_bet.yindex = yi ∧ term.zindex = zi
+| term.mk_bet (bet : term_bet) := bet.xindex = xi ∧ bet.yindex = yi ∧ bet.zindex = zi
 | term.mk_cong (cong : term_cong) := ff
 | term.mk_eq (eq : term_eq) := ff
 end
@@ -132,8 +136,7 @@ end
 
 structure proof : Type :=
 (initial_hyp : proof_state)
-(length : ℕ)
-(inferences : array length inference)
+(inferences : list inference)
 
 -- simple proof to Prop conversion test:
 --
@@ -149,3 +152,21 @@ structure proof : Type :=
   -- end
 
 -- now let's do it for the tarksi geometry
+
+def conclusion (initial : proof_state):  list inference → option proof_state
+| list.nil := initial
+| (list.cons (i: inference) (tl : list inference) ) := do
+  match conclusion tl with
+  | none := none
+  | some (ps : proof_state) := apply_inference ps i
+  end
+
+-- note that (x : α) will always have a coexercion to (option α)
+-- example : option ℕ := ↑2
+
+-- let's test our code out
+def thing : proof :=
+{
+  initial_hyp := ⟨2, 0, array.nil⟩,
+  inferences := [inference.cong_refl 0 1]
+}
