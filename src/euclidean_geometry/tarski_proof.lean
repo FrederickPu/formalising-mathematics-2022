@@ -38,7 +38,7 @@ structure proof_state : Type :=
 
 inductive inference : Type
 | cong_refl (xi yi : ℕ) : inference -- indices of variables x and y
-| cong_id (xi yi zi : ℕ) : inference
+| cong_id (xi yi zi : ℕ) (congxyzz : ℕ) : inference
 | cong_trans (xi yi zi ui vi wi : ℕ) (congxyzu congxyvw : ℕ) : inference -- indices variables and precedent terms
 | bet_id (xi yi : ℕ) (betxyx : ℕ) : inference
 | ax_pasch (xi yi zi ui vi : ℕ) (betxuz betyvz : ℕ): inference
@@ -89,11 +89,16 @@ match i with
   ps.numterms + 1, 
   ps.terms.push_back (term.mk_cong ⟨xi, yi, yi, xi⟩)
   ⟩
-| inference.cong_id xi yi zi := some ⟨
-  ps.numvars, 
-  ps.numterms + 1, 
-  ps.terms.push_back (term.mk_cong ⟨xi, yi, zi, zi⟩) 
-  ⟩
+| inference.cong_id xi yi zi congxyzz := 
+if h : congxyzz < ps.numterms
+then if is_cong xi yi zi zi (ps.terms.read ⟨congxyzz, h⟩)
+    then some ⟨
+      ps.numvars, 
+      ps.numterms + 1, 
+      ps.terms.push_back (term.mk_cong ⟨xi, yi, zi, zi⟩) 
+      ⟩
+    else none
+else none
 | inference.cong_trans xi yi zi ui vi wi congxyzu congxyvw := 
 if h : congxyzu < ps.numterms 
 then if is_cong xi yi zi ui (ps.terms.read ⟨congxyzu, h⟩)
@@ -169,7 +174,7 @@ def conclusion (initial : proof_state):  list inference → option proof_state
 def thing : proof :=
 {
   initial_hyp := ⟨2, 0, array.nil⟩,
-  inferences := [inference.cong_refl 0 1]
+  inferences := [inference.cong_refl 0 1, inference.seg_con 0 1 0 1]
 }
 
 #eval has_repr.repr 2
