@@ -1,5 +1,6 @@
 import tactic
 import data.vector
+import data.list.defs
 -- creating a type of proofs inside a tarski geometry
 -- the goal is to create a clean interface for automatic proof search (not just rewrite search)
 
@@ -276,41 +277,31 @@ def proof_state.valid_infs (ps : proof_state) : list inference :=
 #eval conclusion thing.initial_hyp thing.inferences
 
 def inference.repr : inference → string
-| (inference.cong_refl xyi) := 
-  match xyi with
-  | (xi, yi) := " ⊢ " ++ repr (term.mk_cong ⟨xi, yi, yi, xi⟩)
-  end
-| (inference.cong_id xyzi congxyzz) := 
-  match xyzi with 
-  | (xi, yi, zi) := repr (term.mk_cong ⟨xi, yi, zi, zi⟩) ++ " ⊢ " ++ repr (term.mk_eq ⟨xi, yi⟩)
-  end
-| (inference.cong_trans xyzuvwi congxyzucongxyvw) := 
-  match xyzuvwi, congxyzucongxyvw with
-  |  (xi, yi, zi, ui, vi, wi), (congxyzu, congxyvw) :=
-  repr (term.mk_cong ⟨xi, yi, zi, ui⟩) ++ ", " ++ repr (term.mk_cong ⟨xi, yi, vi, wi⟩) ++ " ⊢ " ++ repr (term.mk_cong ⟨zi, ui, vi, wi⟩)
-  end
-| (inference.bet_id xyi betxyx) :=
-  match xyi with
-  | (xi, yi) :=
-  repr (term.mk_bet ⟨xi, yi, xi⟩) ++ " ⊢ " ++ repr (term.mk_eq ⟨xi, yi⟩)
-  end
-| (inference.ax_pasch xyzuv betxuzbetyvz) := 
-  match xyzuv, betxuzbetyvz with
-  | (x, y, z, u, v), (betxuz, betyvz) :=
-  repr (term.mk_bet ⟨x, u, z⟩) ++ ", " ++ repr (term.mk_bet ⟨y, v, z⟩) ++ " ⊢ " 
-
-    ++ "B " ++ repr y ++ " ?a " ++ repr u ++ " ∧ " ++ "B " ++ repr v ++ " ?a " ++ repr x
-  end
-| (inference.seg_con xyab) := 
-  match xyab with
-  | (x, y, a, b) := " ⊢ " ++ "B " ++ nname x ++ " " ++ nname y ++ " ?z "  ++ " ∧ " ++ nname y ++ " ?z " ++ " ≅ " ++ nname a ++ " " ++ nname b
-  end
-
+| (inference.cong_refl xyi) := "cong_refl"
+| (inference.cong_id xyzi congxyzz) := "cong_id"
+| (inference.cong_trans xyzuvwi congxyzucongxyvw) := "cong_trans"
+| (inference.bet_id xyi betxyx) := "bet_id"
+| (inference.ax_pasch xyzuv betxuzbetyvz) := "ax_pasch"
+| (inference.seg_con xyab) := "seg_con"
 instance : has_repr inference :=
 {
   repr := inference.repr
 }
 
-#eval thing.initial_hyp.valid_infs
+def last {α : Type} [inhabited α] : list α →  α
+| list.nil := default α
+| (list.cons hd tl) := hd
+
+instance : inhabited inference :=
+{
+  default := inference.cong_refl ⟨0, 0⟩
+}
+
+def to_proof_state : option proof_state → proof_state
+| none := ⟨0, 0, array.nil⟩
+| (some val) := val
+
+
+#eval (to_proof_state (apply_inference thing.initial_hyp (last thing.initial_hyp.infs))).valid_infs
 
 #eval [1, 2, 3] ++ [2, 3, 4]
