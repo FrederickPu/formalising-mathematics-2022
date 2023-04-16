@@ -199,9 +199,15 @@ instance : has_repr term :=
   end
 }
 
+def list.vars_repr : list string → string
+| list.nil := ""
+| (list.cons hd tl) :=  
+if tl = list.nil then hd
+else hd ++  ", " ++ list.vars_repr tl
+
 instance : has_repr proof_state :=
 {
-  repr := λ ps, repr ps.terms
+  repr := λ ps, ((list.range ps.numvars).map nname).vars_repr ++ " ⊢ " ++  (repr ps.terms)
 }
 
 #eval conclusion thing.initial_hyp thing.inferences
