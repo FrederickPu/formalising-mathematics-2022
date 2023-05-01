@@ -233,14 +233,6 @@ instance : has_repr proof_state :=
   repr := λ ps, ((list.range ps.numvars).map nname).vars_repr ++ " ⊢ " ++  (repr ps.terms)
 }
 
-structure search_state (α : Type):= 
-(parent : α → option α)
-(visited : α → bool)
-
-def test := [1, 2, 3]
-def f (n : ℕ) : option ℕ :=
-if n > 2 then n
-else none
 
 -- we want to be able to generate a list of all pairs of (xi, yi) or a list of all (xi, yi, zi) in order to iterate over all possible inferences of a given kind (ex bet_id)
 -- let's create a infix macro for list.product
@@ -301,7 +293,16 @@ def to_proof_state : option proof_state → proof_state
 | none := ⟨0, 0, array.nil⟩
 | (some val) := val
 
+-- now let's begin with the actual search algorithm
+-- we need a search state to encode local variables because lean is a functional proggraming language
+structure search_state (α : Type):= 
+(parent : α → option α)
+(visited : α → bool)
 
-#eval (to_proof_state (apply_inference thing.initial_hyp (last thing.initial_hyp.infs))).valid_infs
+-- def search (hyp : proof_state) (target : proof_state) : search_state proof_state → list inference
+-- | (search_state.mk parent visited) := _
+-- :=
+-- do
+-- let l search_state × bool
 
 #eval [1, 2, 3] ++ [2, 3, 4]
