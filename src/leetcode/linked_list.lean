@@ -5,7 +5,7 @@ structure linked_list :=
 (head : ℕ)
 (next : ℕ → ℕ)
 
-lemma what (α : Type) (f : α → α) (n : ℕ) : (f ∘ (f^[n])) = (f^[n+1]) :=
+lemma nat.iterate.succ (α : Type) (f : α → α) (n : ℕ) : (f ∘ (f^[n])) = (f^[n+1]) :=
 begin
 induction n with d dh,
 simp [nat.iterate],
@@ -22,6 +22,23 @@ rw this,
 rw [← this f _ f, ← this (f^[d]) f f],
 rw dh, rw nat.iterate,
 end
+
+lemma nat.iterate.hom (α : Type) (f : α → α) (n m: ℕ) : (f^[m]) ∘ (f^[n]) = (f^[m+n]) :=
+begin
+induction m with d dh,
+ext x,
+simp [nat.iterate],
+
+rw nat.succ_add, rw [← nat.iterate.succ, ← nat.iterate.succ α f (d + n)], 
+rw function.comp.assoc,
+rw dh,
+end
+
+lemma function.comp.def {α β γ : Type} (f : α → β) (g : β → γ) (x : α): (g ∘ f) x = g (f x ) :=
+begin
+exact rfl,
+end
+
 namespace linked_list
 variables (ll : linked_list)
 
@@ -71,12 +88,26 @@ have bruh :
 induction m-1 with d dh,
 simp [nat.iterate],
 
-rw ← what,
+rw ← nat.iterate.succ,
 rw function.comp,
 simp, rw dh,
 simp [two_ptr_step, if_false],
 suffices : ¬ (ll.next^[d] ll.head = (ll.next^[2 * d] ll.head)),
 simp [if_neg this],
+split,
+rw ← nat.iterate.succ,
+
+have l := nat.iterate.hom ℕ ll.next 2 (2*d),
+have : d.succ = d + 1, norm_num,
+rw this,
+ring,
+rw ← l,
+simp,
+rw ← function.comp.def (ll.next^[2]) (ll.next^[2 * d]) ll.head,
+rw ← function.comp.def (ll.next^[2 * d]) (ll.next^[2]) ll.head,
+rw nat.iterate.hom,
+rw nat.iterate.hom,
+ring,
 end
 
 example (P : Prop) [decidable P] (a b : ℕ): ¬ P → (ite P a b) = b :=
