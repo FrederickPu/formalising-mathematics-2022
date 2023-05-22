@@ -34,6 +34,12 @@ rw function.comp.assoc,
 rw dh,
 end
 
+lemma nat.iterate.hom' (α : Type) (f : α → α) (n m: ℕ) (x : α): (f^[m]) ((f^[n]) x )= (f^[m+n]) x :=
+begin
+rw ← function.comp_app (f^[m]),
+simp only [nat.iterate.hom],
+end
+
 lemma function.comp.def {α β γ : Type} (f : α → β) (g : β → γ) (x : α): (g ∘ f) x = g (f x ) :=
 begin
 exact rfl,
@@ -81,16 +87,17 @@ cases h2 with m' hm',
 let s := {x : ℕ | x < m'+1},
 let sm' := { x ∈ s | ll.cycle_at (ll.next^[x] ll.head) }, -- set of all loop indices
 
-have l : fintype ↥ s, exact set.fintype_lt_nat (m' + 1),
+let fin_sm' : finset ℕ := by {
+        have l : fintype ↥ s, exact set.fintype_lt_nat (m' + 1),
+        have  r: sm' ⊆ s, exact set.sep_subset s (λ (x : ℕ), cycle_at ll (ll.next^[x] ll.head)),
 
-have  r: sm' ⊆ s, exact set.sep_subset s (λ (x : ℕ), cycle_at ll (ll.next^[x] ll.head)),
+        have : decidable_pred (λ (_x : ℕ), _x ∈ sm'),
+        simp, intro x,
+        exact classical.dec _,
 
-have : decidable_pred (λ (_x : ℕ), _x ∈ sm'),
-simp, intro x,
-exact classical.dec _,
-
-have := @set.fintype_subset ℕ s sm' l this r,
-let fin_sm' := @set.to_finset ℕ sm' this,
+        have := @set.fintype_subset ℕ s sm' l this r,
+        exact @set.to_finset ℕ sm' this,
+},
 
 have sm'_nonempty : fin_sm'.nonempty := by 
         {use m', simp [hm'], exact h1,},
@@ -102,31 +109,86 @@ simp [sm'] at hm1,
 
 have : ∀ x y, x < y ∧ y < m →  (ll.next^[x] ll.head) ≠ (ll.next^[y] ll.head),
 {
-rintros x y ⟨hx, hy⟩,
-intro h,
+        rintros x y ⟨hx, hy⟩,
+        intro h,
 
-have : ll.cycle_at (ll.next^[x] ll.head),
+        have : ll.cycle_at (ll.next^[x] ll.head),
+        {
+                have temp : y - x > 0, exact tsub_pos_of_lt hx, 
+                have : y - x + x = max y x := tsub_add_eq_max,
+                rw max_eq_left_of_lt hx at this,
+                rw ← this at h,
+                rw ← nat.iterate.hom ℕ ll.next x (y-x) at h,
+
+                simp only [function.comp_app] at h,
+                use y - x,
+                split, exact temp,
+                rw ← h,
+        },
+        specialize hm1 x, 
+        suffices :  x ≥ m, linarith,
+        apply hm1,
+        split,
+                have : m < m' + 1, {simp at hm, exact hm.left,},
+                linarith,
+
+                exact this,
+},
+
+let junc := (ll.next^[m] ll.head), -- junction node
+
+cases h1 with n' hn',
+
+simp at hm,
+cases hm.right with u hu,
+
+let s' : set ℕ := {x : ℕ | x <  u + 1},
+let sn' := {x ∈ s' | (ll.next^[x] junc) = junc},
+let fin_sn' : finset ℕ := set.to_finset sn',
+
+have sn'_nonempty : fin_sn'.nonempty := by {
+        use u,
+        simp,
+        exact hu.right,
+},
+let n := fin_sn'.min' sn'_nonempty,
+have hn : n ∈ fin_sn' := finset.min'_mem fin_sn' sn'_nonempty,
+have hn1 := fin_sn'.min'_le,
+simp [fin_sn'] at hn1,
+
+have : ∀ x y,x < y ∧ y < n → (ll.next^[x] junc) ≠ (ll.next^[y] junc),
 {
-        have temp : y - x > 0, exact tsub_pos_of_lt hx, 
-        have : y - x + x = max y x := tsub_add_eq_max,
-        rw max_eq_left_of_lt hx at this,
-        rw ← this at h,
-        rw ← nat.iterate.hom ℕ ll.next x (y-x) at h,
+        intros x y,
+        
+        intro hxy, intro p,
 
-        simp at h,
-        use y - x,
-        split, exact temp,
-        rw ← h,
-},
-specialize hm1 x, 
-suffices :  x ≥ m, linarith,
-apply hm1,
-split,
-        have : m < m' + 1, {simp at hm, exact hm.left,},
+        have : (ll.next^[y - x]) ((ll.next^[x]) junc)= (ll.next^[x]) junc,
+                rw ← function.comp_app (ll.next^[y - x]),
+                rw nat.iterate.hom,
+                have : (y - x) + x = y := nat.sub_add_cancel (le_of_lt hxy.left),
+                rw this,
+                exact p.symm,
+        have := congr_arg (ll.next^[n - x]) this,
+        have : (ll.next^[(y - x) + ((n - x) + x)] junc) = (ll.next^[(n - x) + x] junc),
+                simp [nat.iterate.hom'] at *,
+                have l : (y - x) + ((n - x) + x) = (n - x) + (y - x) + x, ring,
+                rw l, ring_nf, exact this,
+        
+        have l : n - x + x = n, exact nat.sub_add_cancel (by linarith),
+        simp at hn,
+        rw [l, ← nat.iterate.hom, function.comp_app, hn.right] at this,
+
+        specialize hn1 (y - x),
+        suffices p : y - x < n,
+                have q : ¬ (y - x < n ∧ y - x ≥ n), intro, linarith,
+                apply q,
+                use p,
+                apply hn1,
+                exact ⟨by linarith, this⟩,
+        have : y - x ≤ y := nat.sub_le y x,
         linarith,
-
-        exact this,
 },
+
 
 -- use n,
 
