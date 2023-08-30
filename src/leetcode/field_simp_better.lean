@@ -27,10 +27,10 @@ open tactic.interactive («suffices»)
 meta def assert_denoms_nonzero : tactic unit :=
 do tgt ← target, 
 let denoms := find_denoms tgt,
-denoms.mmap' (λ d, do «suffices» none ``(2+2=4))
+denoms.mmap' (λ d, do «suffices» none ``(%%d≠0))
 
 -- Apply the tactic to the current goal
-example (a b c : ℤ) (h : 1/2 = 0) : 1/2+1/2=0 :=
+example (a b c : ℤ) (h : 1/2 = 0) : 1/2+1/3=0 :=
 begin
   trace_b,
   assert_denoms_nonzero,
