@@ -55,5 +55,75 @@ notation `ℤ⁺` := pos_ int
 notation `ℚ⁺` := pos_ rat
 notation `ℝ⁺` := pos_ real
 
-#check (⟨1, by linarith⟩ : ℕ⁺)
+#check (⟨1, _⟩: ℕ⁺)
 
+structure rat':=
+(a : ℚ)
+(ne_zero : a ≠ 0)
+
+structure nat':=
+(a : ℕ)
+(ne_zero : a ≠ 0)
+
+notation `ℕ*` := nat'
+notation `ℚ*` := rat'
+
+def nat.factorial' : ℕ → ℕ* :=
+ λ n, ⟨n.factorial, factorial_ne_zero n⟩
+protected def nat'.add : ℕ* → ℕ* → ℕ* := 
+  λ ⟨a, ha⟩, λ ⟨b, hb⟩, ⟨a+b, by {
+    have := pos_iff_ne_zero.mpr ha,
+    have := pos_iff_ne_zero.mpr hb,
+    linarith,
+  }⟩ 
+
+def nat'.to_rat' : ℕ* → ℚ* :=
+ λ ⟨n, hn⟩, ⟨(n : ℚ), cast_ne_zero.mpr hn⟩ 
+def nat'.to_nat : ℕ* → ℕ :=
+ λ ⟨n, hn⟩, n
+
+@[simp]
+protected def rat'.mul : ℚ* → ℚ* → ℚ* := 
+  λ ⟨a, ha⟩, λ ⟨b, hb⟩, ⟨a*b, mul_ne_zero ha hb⟩
+@[simp]
+protected def rat'.pow : ℚ* → ℕ → ℚ* :=
+  λ ⟨a, ha⟩, λ n, ⟨a^n, pow_ne_zero n ha⟩ 
+
+instance : has_coe ℕ* ℚ* :=
+⟨nat'.to_rat'⟩
+instance : has_coe ℕ* ℕ :=
+⟨nat'.to_nat⟩
+instance : has_add ℕ* :=
+⟨nat'.add⟩
+instance : has_mul ℚ* :=
+⟨rat'.mul⟩
+instance : has_pow ℚ* ℕ :=
+⟨rat'.pow⟩
+
+-- proof redo using our nonzero machinery
+theorem odd_product_formula' (n : ℕ) :
+  ∏ i in finset.range n, ((2 * (i+1) - 1):ℚ)= ((2 * n).factorial:ℚ) / (n.factorial * 2^n :ℚ) :=
+begin
+  induction n with k hk,
+  { -- Base case: n = 0
+    simp [factorial, finset.prod_range_zero] },
+  { -- Inductive case: n = k + 1
+    have : 2 * k.succ = (2*k).succ.succ,
+      have l : ∀ {x:ℕ}, x.succ = x+ 1 := congr_fun rfl,
+      repeat {rw l},
+      ring,
+    rw this,
+    simp only [finset.prod_range_succ, factorial_succ, pow_succ], -- ∏ product definition
+    rw hk, -- use induction hypothesis
+    field_simp,
+    assert_denoms_nonzero,
+    field_simp,
+    ring,
+    let why := ((⟨k + 1, by linarith⟩ : ℕ*) : ℚ*) * (k.factorial'),
+    have := why.ne_zero,
+    simp [why] at this,
+    simp only [why, rat'.mul, has_mul.mul, rat'.pow, nat.factorial', nat'.to_rat'] at this,
+    simp at this,
+
+  }
+end
