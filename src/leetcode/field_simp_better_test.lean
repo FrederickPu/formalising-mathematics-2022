@@ -58,12 +58,12 @@ notation `ℝ⁺` := pos_ real
 #check (⟨1, _⟩: ℕ⁺)
 
 structure rat':=
-(a : ℚ)
-(ne_zero : a ≠ 0)
+(val : ℚ)
+(ne_zero : val ≠ 0)
 
 structure nat':=
-(a : ℕ)
-(ne_zero : a ≠ 0)
+(val : ℕ)
+(ne_zero : val ≠ 0)
 
 notation `ℕ*` := nat'
 notation `ℚ*` := rat'
@@ -82,11 +82,11 @@ def nat'.to_rat' : ℕ* → ℚ* :=
 def nat'.to_nat : ℕ* → ℕ :=
  λ ⟨n, hn⟩, n
 
-@[simp]
-protected def rat'.mul : ℚ* → ℚ* → ℚ* := 
+@[reducible]
+def rat'.mul : ℚ* → ℚ* → ℚ* := 
   λ ⟨a, ha⟩, λ ⟨b, hb⟩, ⟨a*b, mul_ne_zero ha hb⟩
-@[simp]
-protected def rat'.pow : ℚ* → ℕ → ℚ* :=
+@[reducible]
+def rat'.pow : ℚ* → ℕ → ℚ* :=
   λ ⟨a, ha⟩, λ n, ⟨a^n, pow_ne_zero n ha⟩ 
 
 instance : has_coe ℕ* ℚ* :=
@@ -100,6 +100,31 @@ instance : has_mul ℚ* :=
 instance : has_pow ℚ* ℕ :=
 ⟨rat'.pow⟩
 
+@[simp]
+theorem nat'.add_nat_cast (a b : ℕ*) : (a+b).val = a.val + b.val := begin
+cases a with a ha,
+cases b with b hb,
+refl,
+end
+
+@[simp]
+theorem rat'.mul_rat_cast (a b : ℚ*) : (a*b).val = a.val*b.val := begin
+cases a with a ha,
+cases b with b hb,
+refl,
+end
+
+@[simp]
+theorem rat'.pow_rat_cast (a : ℚ*) (n : ℕ) : (a^n).val = a.val^n := begin
+cases a with a ha,
+refl,
+end
+
+@[simp]
+theorem nat'.cast_rat'_rat_cast (n : ℕ*) : (n : ℚ*).val = (n.val : ℚ) := begin
+cases n with n hn,
+refl,
+end
 -- proof redo using our nonzero machinery
 theorem odd_product_formula' (n : ℕ) :
   ∏ i in finset.range n, ((2 * (i+1) - 1):ℚ)= ((2 * n).factorial:ℚ) / (n.factorial * 2^n :ℚ) :=
@@ -119,11 +144,14 @@ begin
     assert_denoms_nonzero,
     field_simp,
     ring,
-    let why := ((⟨k + 1, by linarith⟩ : ℕ*) : ℚ*) * (k.factorial'),
+    let why := ((⟨k + 1, by linarith⟩ : ℕ*) : ℚ*) * (k.factorial') * ((⟨2, by linarith⟩: ℚ*)*(⟨2, by linarith⟩: ℚ*)^k),
     have := why.ne_zero,
-    simp [why] at this,
-    simp only [why, rat'.mul, has_mul.mul, rat'.pow, nat.factorial', nat'.to_rat'] at this,
-    simp at this,
+    simp only [rat'.mul_rat_cast, nat'.cast_rat'_rat_cast, rat'.pow_rat_cast] at this,
+    exact this,
 
+    let why := ((k.factorial'):ℚ*) * (⟨2, by linarith⟩: ℚ*)^k,
+    have := why.ne_zero,
+    simp only [rat'.mul_rat_cast, nat'.cast_rat'_rat_cast, rat'.pow_rat_cast] at this,
+    exact this,
   }
 end
