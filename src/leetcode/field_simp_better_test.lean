@@ -1,5 +1,7 @@
 import leetcode.field_simp_better
 
+import data.real.basic
+
 import algebra.big_operators.basic
 import data.nat.factorial.basic
 
@@ -42,3 +44,16 @@ begin
     exact two_ne_zero,
   }
 end
+
+#check ordered_semiring
+structure pos_ (α : Type*) [ordered_cancel_add_comm_monoid α] :=
+(a : α)
+(isPos : a > 0)
+
+notation `ℕ⁺` := pos_ nat
+notation `ℤ⁺` := pos_ int
+notation `ℚ⁺` := pos_ rat
+notation `ℝ⁺` := pos_ real
+
+#check (⟨1, by linarith⟩ : ℕ⁺)
+
