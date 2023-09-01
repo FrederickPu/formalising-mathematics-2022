@@ -125,6 +125,27 @@ theorem nat'.cast_rat'_rat_cast (n : ℕ*) : (n : ℚ*).val = (n.val : ℚ) := b
 cases n with n hn,
 refl,
 end
+
+open tactic expr
+
+open tactic.interactive («have»)
+
+namespace tactic
+namespace interactive
+
+setup_tactic_parser
+
+-- TODO:: provide a more a descriptive name for noice
+meta def noice (cert : parse parser.pexpr) : tactic unit :=
+do
+  c ← to_expr cert,
+  «have» none none ``(rat'.ne_zero %%c),
+  `[simp only [rat'.mul_rat_cast, nat'.cast_rat'_rat_cast, rat'.pow_rat_cast] at this],
+  `[exact this]
+end interactive
+end tactic
+
+#check tactic.interactive.noice
 -- proof redo using our nonzero machinery
 theorem odd_product_formula' (n : ℕ) :
   ∏ i in finset.range n, ((2 * (i+1) - 1):ℚ)= ((2 * n).factorial:ℚ) / (n.factorial * 2^n :ℚ) :=
@@ -144,14 +165,8 @@ begin
     assert_denoms_nonzero,
     field_simp,
     ring,
-    let why := ((⟨k + 1, by linarith⟩ : ℕ*) : ℚ*) * (k.factorial') * ((⟨2, by linarith⟩: ℚ*)*(⟨2, by linarith⟩: ℚ*)^k),
-    have := why.ne_zero,
-    simp only [rat'.mul_rat_cast, nat'.cast_rat'_rat_cast, rat'.pow_rat_cast] at this,
-    exact this,
 
-    let why := ((k.factorial'):ℚ*) * (⟨2, by linarith⟩: ℚ*)^k,
-    have := why.ne_zero,
-    simp only [rat'.mul_rat_cast, nat'.cast_rat'_rat_cast, rat'.pow_rat_cast] at this,
-    exact this,
+    noice (((⟨k + 1, by linarith⟩ : ℕ*) : ℚ*) * (k.factorial') * ((⟨2, by linarith⟩: ℚ*)*(⟨2, by linarith⟩: ℚ*)^k)),
+    noice (((k.factorial'):ℚ*) * (⟨2, by linarith⟩: ℚ*)^k),
   }
 end
