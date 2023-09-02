@@ -21,4 +21,7 @@ have h : (x + (b / (2 * a)))^2 = ((b^2) / (4 * (a^2))) - (c / a),
 },
 have h : (x + (b / (2 * a)))^2 = (b^2 - 4 * a * c) / (4 * a^2),
 rw h, field_simp, ring,
+rw ← @real.sq_sqrt ((b^2 - 4 * a * c) / (4 * a^2)) _ at h,
+have := eq_or_eq_neg_of_sq_eq_sq _ _ h,
+
 end
