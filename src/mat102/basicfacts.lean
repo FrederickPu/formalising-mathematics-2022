@@ -6,43 +6,26 @@ inductive exactlyone3 (P Q R : Prop) : Prop
 | hQ : (¬ P ∧ Q ∧ ¬ R) → exactlyone3
 | hR : (¬ P ∧ ¬Q ∧ R) → exactlyone3
 
+-- proves basic facts about exactlyone3 (and possibly other custom proposition combinators)
+meta def kill : tactic unit := 
+do 
+`[
+  intro h,
+  cases h;
+  simp [h]
+]
 
-theorem exactlyone3.elim_p_q {P Q R : Prop} : exactlyone3 P Q R → P → Q → false
-| (exactlyone3.hP h) := by {
-  intros p q,
-  simp [p, q] at h,
-  exact h,
-}
-| (exactlyone3.hQ h) := by {
-  intros p q,
-  simp [p, q] at h,
-  exact h,
-}
-| (exactlyone3.hR h) := by {
-  intros p q,
-  simp [p, q] at h,
-  exact h,
-}
+theorem exactlyone3.elim_p_q {P Q R : Prop} : exactlyone3 P Q R → P → Q → false :=
+by kill
 
-theorem exactlyone3.elim_p_r {P Q R : Prop} : exactlyone3 P Q R → P → R → false
-| (exactlyone3.hP h) := by {
-  intros p r,
-  simp [p, r] at h,
-  exact h,
-}
-| (exactlyone3.hQ h) := by {
-  intros p r,
-  simp [p, r] at h,
-  exact h,
-}
-| (exactlyone3.hR h) := by {
-  intros p r,
-  simp [p, r] at h,
-  exact h,
-}
+theorem exactlyone3.elim_p_r {P Q R : Prop} : exactlyone3 P Q R → P → R → false :=
+by kill
+
+theorem exactlyone3.elim_nq_nr {P Q R : Prop} : exactlyone3 P Q R → ¬ Q → ¬ R → P := 
+by kill
 
 -- chp 1.2
-class basic (α : Type*) extends ring α, has_lt α :=
+class basic (α : Type*) extends ring α, has_lt α, nontrivial α :=
 (basic1 (x y : α) : exactlyone3 (x < y) (y < x) (x = y))
 (basic2 (x y z : α) : x < y → y < z → x < z)
 (basic3 (x y z: α) : x < y → x + z < y + z)
@@ -59,12 +42,29 @@ simp at this,
 exact this,
 end
 
-example  (α : Type*) [basic α] : ¬ ((1:α) < 0) := begin
+theorem basic.not_one_lt_zero {α : Type*} [basic α] : ¬ ((1:α) < 0) := begin
 intro h,
 have := l1 (1 : α) 0 1 h h,
 simp at this,
 exact exactlyone3.elim_p_q (basic.basic1 (0:α) 1) this h,
 end
 
--- we can't prove (1:α) ≠ (0:α) because the ring could be trivial
+theorem basic.one_ne_zero {α : Type*} [basic α] : (1 : α) ≠ 0 := begin
+intro h,
+have crux : ∀ x : α, x = 0,
+{
+intro x,
+have : x*1 = x, simp,
+simp [h] at this,
+exact this.symm,
+},
+rcases @nontrivial.exists_pair_ne α _ with ⟨x, y, p⟩,
+simp [crux x, crux y] at p,
+exact p,
+end
 
+theorem basic.zero_lt_one {α : Type*} [basic α] : 0 < (1 : α) := begin
+apply exactlyone3.elim_nq_nr (basic.basic1 (0:α) (1:α)),
+exact basic.not_one_lt_zero,
+exact basic.one_ne_zero.symm,
+end
