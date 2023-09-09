@@ -1,4 +1,4 @@
-import data.real.basic
+import data.real.sqrt
 
 theorem AGM_1 (x y : ℝ) : x * y ≤ ((x + y)/2)^2 := begin
 suffices : x*y ≤ (x^2 + 2*x*y + y^2)/(4:ℝ),
@@ -11,11 +11,25 @@ linarith,
 
 exact sq_nonneg (x - y),
 end
+theorem AGM_1' (x y : ℝ) : x ≥ 0 → y ≥ 0 → (x*y).sqrt ≤ (x + y) / 2 := begin
+intros hx hy,
+have := AGM_1 x y,
+rw ← @real.sqrt_sq ((x + y)/2) (by linarith),
+exact real.sqrt_le_sqrt this,
+end
 
 theorem AGM_2 (x y : ℝ) : (x = y) →  x * y = ((x + y)/2)^2 := begin
 intro h,
 rw h,
 ring,
+end
+
+theorem AGM_2' (x y : ℝ) : x ≥ 0 → y ≥ 0 → (x = y) → (x*y).sqrt = (x + y) / 2  := begin
+intros hx hy,
+intro h,
+rw h,
+ring,
+exact real.sqrt_sq hy,
 end
 
 theorem AGM_3 (x y : ℝ) : x * y = ((x + y)/2)^2 → (x = y) := begin
@@ -28,6 +42,14 @@ linarith,
 suffices : x - y = 0,
 linarith,
 exact pow_eq_zero (eq.symm h),
+end
+
+theorem AGM_3' (x y : ℝ) : x ≥ 0 → y ≥ 0 → (x*y).sqrt = (x + y) / 2 → x = y := begin
+intros hx hy,
+intro h,
+apply AGM_3 x y,
+rw ← @real.sq_sqrt (x*y) (mul_nonneg hx hy),
+exact congr_fun (congr_arg pow h) 2,
 end
 
 example (a b : ℝ) (h : a + 2*b = 50) : a * b ≤ 25^2/2 ∧ ∃ a1 b1 :ℝ, a1*b1 = 25^2/2 := begin
