@@ -58,5 +58,22 @@ theorem ch1_1_14 (x y z : ℝ) : x > y → y > z → x*y + y*z > ((x+y)*(y+z))/2
 intros h1 h2,
 have : y - z > 0, linarith only [h2],
 have : x*(y-z) > y*(y - z), exact (mul_lt_mul_right this).mpr h1,
+linarith, 
+end
+theorem ch1_1_15 (x y z : ℝ) (hx : x ≥ 0) (hy : y ≥ 0) (hz : z ≥ 0) (h : x + z ≤ 2): 
+(x - 2*y + z)^2 ≥ 4*x*z - 8*y := begin
+have : 8 ≥ 4*(x+z), linarith,
+have : 8*y ≥ (4*(x+z))*y, exact mul_mono_nonneg hy this,
+have : (x - 2*y+z)^2 + 8*y ≥ (x - 2*y + z)^2 + 4*(x+z)*y,
+linarith,
+have l : (x - 2*y+z)^2 + 4*(x+z)*y = (x - z)^2 + 4*y^2 + 4*x*z,
+  ring,
+rw l at this,
+
+have : (x - z)^2 ≥ 0, exact sq_nonneg (x - z),
+have : y^2 ≥ 0, exact sq_nonneg y,
+have : (x - z) ^ 2 + 4 * y ^ 2 + 4 * x * z ≥ 4*x*z,
+linarith,
+
 linarith,
 end
