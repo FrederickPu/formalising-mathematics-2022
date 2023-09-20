@@ -31,7 +31,7 @@ rw nat.mul_div_cancel k this,
   exact aliif,
 },
 end 
-example (a b : ℕ) : b > 0 → share_p a b → ∃ a' b' : ℕ, b' < b ∧ (a' : ℚ) / (b' : ℚ) = (a : ℚ) / (b : ℚ) := begin
+theorem desc (a b : ℕ) : b > 0 → share_p a b → ∃ a' b' : ℕ, b' < b ∧ b' > 0 ∧ (a' : ℚ) / (b' : ℚ) = (a : ℚ) / (b : ℚ) := begin
 intros w h,
 rcases h with ⟨p, ⟨hp, ⟨ha, hb⟩⟩⟩,
 use (a / p), use (b / p),
@@ -48,11 +48,41 @@ cases nat.succ_le_iff.mpr this,
 exact false.elim (hp (refl 1)),
 exact (ne.symm hp).lt_of_le _x,
 
+split,
+exact oops b p w hb,
+
 have := nat.pos_of_dvd_of_pos hb w,
 have : (p:ℚ) ≠ 0 := nat.cast_ne_zero.mpr (ne_of_gt this),
 rw [rat.coe_nat_div a p ha, rat.coe_nat_div b p hb],
 field_simp,
 end  
+
+#check is_strict_total_order
+ 
+theorem strong (b : ℕ) : ∀ b'< b, b' > 0 → ∀ a : ℕ, ∃ p q : ℕ, (p:ℚ) / (q:ℚ) = (a:ℚ) / (b':ℚ) ∧ ¬ (share_p p q) := begin
+induction b with d dh,
+simp,
+
+intros b' hb' hb'' a,
+cases em (share_p a b'),
+rcases desc a b' hb'' h with ⟨p, ⟨q, h⟩ ⟩,
+specialize dh q (by {
+  cases h,
+  have : b' ≤ d, exact nat.lt_succ_iff.mp hb',
+  linarith,
+}) h.right.left p,
+rcases dh with ⟨p', ⟨q', h'⟩ ⟩,
+use p', use q',
+rw ← h.right.right,
+exact h',
+
+use a, use b', 
+exact ⟨refl _, h⟩,
+end
+
+theorem pff (a b : ℕ) (hb : b > 0): ∃ p q : ℕ, (p : ℚ) / (q : ℚ) = (a : ℚ) / (b : ℚ) ∧ ¬ share_p p q := begin
+exact strong (b + 1) b (by linarith) hb a,
+end
 
 example (a b : ℤ) (hb : b ≠ 0): ∃ p q : ℤ, q ≠ 0 ∧ (a : ℚ) / (b : ℚ) = (p : ℚ) / (q : ℚ) := begin
 suffices : ¬ (∀ p q : ℤ,  ¬ (q ≠ 0 ∧ ((a : ℚ) / (b : ℚ) = (p : ℚ) / (q : ℚ) ))),
