@@ -84,9 +84,94 @@ theorem pff (a b : ℕ) (hb : b > 0): ∃ p q : ℕ, (p : ℚ) / (q : ℚ) = (a 
 exact strong (b + 1) b (by linarith) hb a,
 end
 
-example (a b : ℤ) (hb : b ≠ 0): ∃ p q : ℤ, q ≠ 0 ∧ (a : ℚ) / (b : ℚ) = (p : ℚ) / (q : ℚ) := begin
-suffices : ¬ (∀ p q : ℤ,  ¬ (q ≠ 0 ∧ ((a : ℚ) / (b : ℚ) = (p : ℚ) / (q : ℚ) ))),
-tauto,
-intro h,
+#check order_dual
 
+def nat.even (a : ℕ) := ∃ k : ℕ, a = 2*k 
+def nat.odd (a : ℕ) := ∃ k : ℕ, a = 2*k + 1
+
+theorem nat.even_or_odd (a : ℕ) : a.even ∨ a.odd := begin
+induction a,
+left,
+use 0, simp,
+cases a_ih with p q,
+cases p with k hk,
+rw hk,
+right,
+use k, 
+
+cases q with k hk,
+rw hk,
+left,
+use (k + 1), ring,
+end
+
+theorem nat.not_even_and_odd (a : ℕ) : ¬ (a.even ∧ a.odd) := begin
+rintro ⟨⟨k1, hk1⟩, ⟨k2, hk2⟩⟩,
+rw hk1 at hk2,
+have : 2*k1 - 2*k2 = 1, exact norm_num.sub_nat_pos (2 * k1) (2 * k2) 1 (eq.symm hk2),
+rw ← mul_tsub 2 k1 k2 at this,
+simp at this,
+exact this,
+end
+
+theorem nat.even_sq (a : ℕ) : a.even → (a^2).even := begin
+rintro ⟨k, hk⟩,
+rw hk,
+use (2*k^2),
+ring,
+end
+
+theorem nat.odd_sq (a : ℕ) : a.odd → (a^2).odd := begin
+rintro ⟨k, hk⟩,
+rw hk,
+use (2*k^2+2*k),
+ring,
+end
+
+theorem nat.even_of_sq_even (a : ℕ) : (a^2).even → a.even := begin
+intro h,
+cases a.even_or_odd,
+exact h_1,
+
+have := nat.not_even_and_odd (a^2) ⟨h, a.odd_sq h_1⟩,
+exact false.elim this,
+end 
+
+theorem nat.even_imp_div_two (a : ℕ) : a.even → 2 ∣ a := begin
+rintro ⟨k, hk⟩,
+exact dvd.intro k (eq.symm hk), 
+end
+example (a b c : ℕ) (h : c ≠ 0): c*a = c*b →  a = b := begin
+intro h,
+exact (mul_right_inj' h).mp h_1,
+end
+
+example (a b : ℕ) (hb : b > 0): ((a : ℚ) / (b : ℚ))^2 = 2 → share_p a b := begin
+intro h,
+have h' : a^2 = 2*b^2, 
+{
+  have : (b : ℚ) ≠ 0, exact nat.cast_ne_zero.mpr (ne_of_gt hb),
+  field_simp at h,
+  have : ((a^2 : ℕ) : ℚ) = ((2*b^2 : ℕ) : ℚ), simp,
+  exact h, exact nat.cast_inj.mp this,
+},
+have : (a^2).even, 
+{
+  rw h',
+  use b^2,
+},
+cases nat.even_of_sq_even a this with k hk,
+rw hk at h',
+ring_nf at h',
+have : 2*(2*k^2) = 2*(b^2), ring, exact h',
+have : 2*k^2 = b^2, exact (mul_right_inj' (ne_zero.ne 2)).mp this,
+have := b.even_of_sq_even ⟨k^2, eq.symm this⟩,
+have divB := b.even_imp_div_two this,
+have divA : 2 ∣ a, exact dvd.intro k (eq.symm hk),
+use 2,
+split,
+simp,
+split,
+exact divA,
+exact divB,
 end
