@@ -59,7 +59,7 @@ end
 
 #check is_strict_total_order
  
-theorem strong (b : ℕ) : ∀ b'< b, b' > 0 → ∀ a : ℕ, ∃ p q : ℕ, (p:ℚ) / (q:ℚ) = (a:ℚ) / (b':ℚ) ∧ ¬ (share_p p q) := begin
+theorem strong (b : ℕ) : ∀ b'< b, b' > 0 → ∀ a : ℕ, ∃ p q : ℕ, q > 0 ∧ (p:ℚ) / (q:ℚ) = (a:ℚ) / (b':ℚ) ∧ ¬ (share_p p q) := begin
 induction b with d dh,
 simp,
 
@@ -77,10 +77,14 @@ rw ← h.right.right,
 exact h',
 
 use a, use b', 
-exact ⟨refl _, h⟩,
+split,
+exact hb'',
+split,
+refl,
+exact h,
 end
 
-theorem pff (a b : ℕ) (hb : b > 0): ∃ p q : ℕ, (p : ℚ) / (q : ℚ) = (a : ℚ) / (b : ℚ) ∧ ¬ share_p p q := begin
+theorem has_reduced (a b : ℕ) (hb : b > 0): ∃ p q : ℕ, q > 0 ∧ (p : ℚ) / (q : ℚ) = (a : ℚ) / (b : ℚ) ∧ ¬ share_p p q := begin
 exact strong (b + 1) b (by linarith) hb a,
 end
 
@@ -141,12 +145,12 @@ theorem nat.even_imp_div_two (a : ℕ) : a.even → 2 ∣ a := begin
 rintro ⟨k, hk⟩,
 exact dvd.intro k (eq.symm hk), 
 end
-example (a b c : ℕ) (h : c ≠ 0): c*a = c*b →  a = b := begin
+example (a b c : ℕ) (hc : c ≠ 0): c*a = c*b →  a = b := begin
 intro h,
-exact (mul_right_inj' h).mp h_1,
+exact (mul_right_inj' hc).mp h,
 end
 
-example (a b : ℕ) (hb : b > 0): ((a : ℚ) / (b : ℚ))^2 = 2 → share_p a b := begin
+theorem bruh (a b : ℕ) (hb : b > 0): ((a : ℚ) / (b : ℚ))^2 = 2 → share_p a b := begin
 intro h,
 have h' : a^2 = 2*b^2, 
 {
@@ -174,4 +178,14 @@ simp,
 split,
 exact divA,
 exact divB,
+end
+
+theorem full : ∀ (a b : ℕ), b > 0 →  ¬ (((a : ℚ) / (b : ℚ))^2 = 2) := begin
+intros a b,
+intros hb h,
+rcases has_reduced a b hb with ⟨p, ⟨q, h⟩⟩,
+cases h,
+have := bruh p q h_left,
+rw ← h_right.left at h,
+exact h_right.right (this h),
 end
