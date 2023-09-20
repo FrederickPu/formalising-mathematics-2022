@@ -106,4 +106,4 @@ do
 let (i, l, v, v1) := s.valid_aux_cert,
 if l = [] then ⟨tt, v1⟩ else ⟨ff, v1⟩
 
-#eval (string.valid_cert "(())(())").snd
+#eval (string.valid_cert "(())((()()))()").snd
