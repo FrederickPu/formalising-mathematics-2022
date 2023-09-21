@@ -136,6 +136,40 @@ have := h ⌊x⌋,
 simp [this],
 end
 
+#check floor_ring real
+#check int.floor_eq_iff
+
+example (M : ℝ) (hM : M > 0) : Msep M jim (λ _, 0) := begin
+simp [Msep],
+intro x,
+use (max (int.floor x + 1:ℤ) (int.floor M + 1:ℤ)),
+split,
+{
+  suffices : ((int.floor x + 1:ℤ):ℝ)  ≤ (max (int.floor x + 1:ℤ) (int.floor M + 1:ℤ) : ℝ),
+  have :  x < ((int.floor x + 1:ℤ):ℝ),
+    push_cast,
+    exact (int.floor_eq_iff.mp (refl (int.floor x))).right,
+  linarith,
+
+  exact le_max_left _ _,
+},
+{
+  have := le_max_right ((int.floor x + 1:ℤ):ℝ) (int.floor M + 1:ℤ),
+  have :  M < ((int.floor M + 1:ℤ):ℝ),
+    push_cast,
+    exact (int.floor_eq_iff.mp (refl (int.floor M))).right,
+  have l1 : M < (max ((int.floor x + 1:ℤ):ℝ ) ((int.floor M + 1:ℤ):ℝ)),
+  linarith,
+  have l2 : ((max (⌊x⌋ + 1:ℤ) (⌊M⌋ + 1:ℤ)) :ℝ) = (((max (⌊x⌋ + 1) (⌊M⌋ + 1)):ℤ):ℝ),
+    push_cast,
+  rw [l2, jim_int, abs_eq_self.mpr _],
+  rw ← l2, 
+  exact le_of_lt l1,
+  
+  linarith,
+},
+end
+
 example : Msep 1 jim (λ _, 0) := begin
 simp [Msep],
 intro x,
