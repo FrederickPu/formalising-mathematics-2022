@@ -120,7 +120,7 @@ end Q8
 -- however we can use a similar technique to the `gibbs` function in 8.b) for Q7
 section Q7
 noncomputable def jim (x : ℝ) := ite ((floor_ring.floor x : ℝ) = x) x 0
--- if we can get it to work for M = 1, we can simply scale the solution up and down to satisfy other values of M.
+-- if we can get it to work for M = 1, we can simply scale the logic up and down to satisfy other values of M.
 -- to satisfy 1-sep, we need only pick an integer y greater than every x
 -- moreover, because you can always find jim(y) = 0 for non integer real numbers, making M-far false.
 
@@ -136,8 +136,7 @@ have := h ⌊x⌋,
 simp [this],
 end
 
-example : ∃ f g, Msep 1 f g := begin
-use jim, use (λ _, 0),
+example : Msep 1 jim (λ _, 0) := begin
 simp [Msep],
 intro x,
 use ⌊|x|⌋ + 1,
@@ -160,4 +159,36 @@ have := int.floor_nonneg.mpr this,
 have : (⌊|x|⌋ :ℝ) ≥ 0, simp [this],
 linarith,
 end 
+
+theorem int.no_bet (n : ℤ) : ∀ x : ℤ, ¬ (n < x ∧ x < n + 1) := begin
+intro x,
+simp,
+intro h,
+exact int.add_one_le_iff.mpr h,
+end
+
+example (M : ℝ) (hM : M > 0) : ¬ (Mfar M jim (λ _, 0)) := begin
+simp [Mfar],
+intro x,
+use int.floor x + 1.5,
+split,
+have : x < int.floor x + 1, simp,
+linarith,
+
+rw jim_non_int,
+simp, exact hM,
+{
+  intro y,
+  intro h,
+  have l : ((y - int.floor x - 1:ℤ):ℝ)  = (0.5:ℝ),
+  push_cast, linarith,
+  have : ((0 : ℤ): ℝ) < 0.5 ∧ 0.5 < ((1:ℤ):ℝ), split,
+  norm_num, norm_num,
+  rw ← l at this,
+  have l1 := int.cast_lt.mp this.left,
+  have l2 := int.cast_lt.mp this.right,
+  have := (0:ℤ).no_bet (y - ⌊x⌋ - 1),
+  exact this ⟨l1, l2⟩,
+},
+end
 end Q7
