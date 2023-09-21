@@ -36,7 +36,7 @@ variables
 
 example : A ∪ A = A :=
 begin
-  sorry
+  
 end
 
 example : A ∩ A = A :=

@@ -35,7 +35,9 @@ variables (P Q R : Prop)
 
 example : ¬ true → false :=
 begin
-  sorry
+intro h,
+apply h,
+triv,
 end
 
 example : false → ¬ true :=

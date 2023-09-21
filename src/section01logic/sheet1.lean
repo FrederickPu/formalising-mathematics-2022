@@ -53,28 +53,19 @@ variables (P Q R : Prop)
 -- Assume that `P` and `Q` and `R` are all true. Deduce that `P` is true.
 example (hP : P) (hQ : Q) (hR : R) : P :=
 begin
-  -- note that `exact P` does *not* work. `P` is the proposition, `hP` is the proof.
-  exact hP,
+  
 end
 
 -- Assume `Q` is true. Prove that `P → Q`. 
 example (hQ : Q) : P → Q :=
 begin
-  -- The goal is of the form `X → Y` so we can use `intro`
-  intro h,
-  -- now `h` is the hypothesis that `P` is true.
-  -- Our goal is now the same as a hypothesis so we can use `exact`
-  exact hQ,
-  -- note `exact Q` doesn't work: `exact` takes the *term*, not the type.
+ 
 end
 
 -- Assume `P → Q` and `P` is true. Deduce `Q`.
 example (h : P → Q) (hP : P) : Q :=
 begin
-  -- our goal is `⊢ Q` which matches with the conclusion of `h` so `apply` works
-  apply h,
-  -- now our goal has changed to `P` which is an assumption
-  exact hP,
+  
 end
 
 /-
@@ -89,7 +80,7 @@ using `intro`, `exact` and `apply`.
 /-- Every proposition implies itself. -/
 example : P → P :=
 begin
-  sorry
+  
 end
 
 /-
@@ -109,7 +100,7 @@ So the next level is asking you prove that `P → (Q → P)`.
 -/
 example : P → Q → P :=
 begin
-  sorry
+  
 end
 
 /-- If we know `P`, and we also know `P → Q`, we can deduce `Q`. 
