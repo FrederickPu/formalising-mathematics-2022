@@ -51,6 +51,22 @@ exact ne.elim (h ⌊x⌋),
 end
 
 -- Q8
+-- a) 
+example (M : ℝ) (hM : M > 0) : ∀ f g, Mfar M f g → Msep M f g := begin
+intros f g,
+simp only [Mfar, Msep],
+intro h, -- f is M-far from g
+cases h with z h, -- there is some `z` for which every `y > z`, `|f y - g y| ≥ M`
+intro x,
+use (max x z) + 1, -- thus we can simply pick any (specifically `max x z + 1`) `y` greater than both `x ` and `z`. 
+split,
+  linarith [le_max_left x z],
+{
+  specialize h (max x z + 1),
+  apply h,
+  linarith [le_max_right x z],
+},
+end
 -- b)
 example : ¬ (∀ f g, Msep 1 f g → Mfar 1 f g) := begin
 simp,
