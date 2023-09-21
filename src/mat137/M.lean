@@ -34,6 +34,7 @@ have : M < y^2, exact real.lt_sq_of_sqrt_lt hy,
 exact le_of_lt this,
 end 
 
+section Q8
 noncomputable def gib (x : ℝ) : ℝ := ite (((floor_ring.floor x):ℝ) = x) 0 1
 
 example : gib 1 = 0 := begin
@@ -113,3 +114,50 @@ rw this,
 rw gib_int,
 norm_num,
 end
+end Q8
+
+-- Q8 is actually easier than Q7
+-- however we can use a similar technique to the `gibbs` function in 8.b) for Q7
+section Q7
+noncomputable def jim (x : ℝ) := ite ((floor_ring.floor x : ℝ) = x) x 0
+-- if we can get it to work for M = 1, we can simply scale the solution up and down to satisfy other values of M.
+-- to satisfy 1-sep, we need only pick an integer y greater than every x
+-- moreover, because you can always find jim(y) = 0 for non integer real numbers, making M-far false.
+
+theorem jim_int : ∀ x : ℤ, jim x = x := begin
+intro x,
+simp [jim],
+end
+
+theorem jim_non_int (x : ℝ) : (∀ y : ℤ, (y : ℝ) ≠ x) → jim x = 0 := begin
+intro h,
+simp only [jim, int.floor_ring_floor_eq],
+have := h ⌊x⌋,
+simp [this],
+end
+
+example : ∃ f g, Msep 1 f g := begin
+use jim, use (λ _, 0),
+simp [Msep],
+intro x,
+use ⌊|x|⌋ + 1,
+split,
+have : |x| < ↑⌊|x|⌋ + 1,
+simp,
+have : x ≤ |x|, exact le_abs_self x,
+linarith,
+have : ↑⌊|x|⌋ + 1 = ((⌊|x|⌋ + 1 : ℤ) : ℝ), push_cast,
+rw this,
+rw jim_int,
+rw abs_eq_self.mpr _,
+norm_num,
+have : |x| ≥ 0, exact abs_nonneg x,
+exact int.floor_nonneg.mpr this,
+
+simp,
+have : |x| ≥ 0, exact abs_nonneg x,
+have := int.floor_nonneg.mpr this,
+have : (⌊|x|⌋ :ℝ) ≥ 0, simp [this],
+linarith,
+end 
+end Q7
