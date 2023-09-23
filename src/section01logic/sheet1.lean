@@ -53,19 +53,22 @@ variables (P Q R : Prop)
 -- Assume that `P` and `Q` and `R` are all true. Deduce that `P` is true.
 example (hP : P) (hQ : Q) (hR : R) : P :=
 begin
-  
+exact hP,
 end
 
 -- Assume `Q` is true. Prove that `P → Q`. 
 example (hQ : Q) : P → Q :=
 begin
- 
+intro p,
+exact hQ,
+
 end
 
 -- Assume `P → Q` and `P` is true. Deduce `Q`.
 example (h : P → Q) (hP : P) : Q :=
 begin
-  
+  apply h, 
+  exact hP,
 end
 
 /-
@@ -80,6 +83,7 @@ using `intro`, `exact` and `apply`.
 /-- Every proposition implies itself. -/
 example : P → P :=
 begin
+  intro l,
   
 end
 

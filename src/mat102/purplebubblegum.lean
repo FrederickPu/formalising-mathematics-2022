@@ -46,3 +46,38 @@ linarith [real.sqrt_le_sqrt h],
   linarith [real.sqrt_le_sqrt h],
 },
 end
+
+def array 5 (array 5 (fin 5)):= ![![0, 0, 0, 0], 
+ ![0, 1, 2, 3], 
+ ![0, 2, 4, 2], 
+ ![0, 3, 6, 4], 
+ ![0, 4, 3, 2]]
+
+def my_mul : fin 5 → fin 5 → fin 5 := 
+![
+![0, 0, 0, 0, 0],
+![0, 1, 2, 3, 4],
+![0, 2, 4, 1, 3],
+![0, 3, 1, 4, 2],
+![0, 4, 3, 2, 1]]
+
+def my_add : fin 5 → fin 5 → fin 5 :=
+![![0, 1, 2, 3, 4],
+![1, 2, 3, 4, 0],
+![2, 3, 4, 0, 1],
+![3, 4, 0, 1, 2],
+![4, 0, 1, 2, 3]]
+
+def oops := (list.fin_range 5).map $ λ x, (list.fin_range 5).map $ λ y, (list.fin_range 5).map $ λz, my_mul x (my_add y z)
+def whoops := (list.fin_range 5).map $ λ x, (list.fin_range 5).map $ λ y, (list.fin_range 5).map $ λ z, my_add (my_mul x y) (my_mul x z)
+
+#eval if oops = whoops then tt else ff
+#eval (list.fin_range 5).map (λ x, (list.fin_range 5).map (λ y, my_mul x y))
+
+#eval (list.fin_range 5).map $ λ x, (list.fin_range 5).map $ λ y, (list.fin_range 5).map $ λ z, if (my_add (my_mul x y) (my_mul x z) = my_mul x (my_add y z)) then tt else ff
+#eval (list.fin_range 5).map $ λ x, (list.fin_range 5).map $ λ y, if my_mul x y = my_mul y x then tt else ff
+#eval (list.fin_range 5).map $ λ x, (list.fin_range 5).map $ λ y, if my_add x y = my_add y x then tt else ff
+
+#eval (list.fin_range 5).map $ λ x, list.filter (λ y : fin 5, my_add x y = 0) (list.fin_range 5) 
+#eval (list.fin_range 5).map $ λ x, list.filter (λ y : fin 5, my_mul x y = 1) (list.fin_range 5) 
+#check list.filter
