@@ -51,7 +51,7 @@ have : ((6:ℕ) : ℤ) ∣ ((n^3 + 5*n:ℕ) : ℤ),
 exact int.coe_nat_dvd.mpr this,
 exact this,
 
-have := int.coe_nat_dvd.mpr (Q4_nat (n+1)),
+have := int.coe_nat_dvd.mpr (Q3_nat (n+1)),
 have := dvd_neg.mpr this,
 apply div_subst this,
 rw int.neg_succ_of_nat_eq,
