@@ -126,6 +126,11 @@ cases n with n hn,
 refl,
 end
 
+@[simp]
+theorem nat.factorial'_cast (n : ℕ) : (n.factorial').val = n.factorial := begin
+rw [nat.factorial'],
+end
+
 open tactic expr
 
 open tactic.interactive («have»)
@@ -140,7 +145,7 @@ meta def noice (cert : parse parser.pexpr) : tactic unit :=
 do
   c ← to_expr cert,
   «have» none none ``(rat'.ne_zero %%c),
-  `[simp only [rat'.mul_rat_cast, nat'.cast_rat'_rat_cast, rat'.pow_rat_cast] at this],
+  `[simp only [rat'.mul_rat_cast, nat'.cast_rat'_rat_cast, rat'.pow_rat_cast, nat.factorial'_cast, cast_add, cast_one] at this],
   `[exact this]
 end interactive
 end tactic
@@ -170,3 +175,5 @@ begin
     noice (((k.factorial'):ℚ*) * (⟨2, by linarith⟩: ℚ*)^k),
   }
 end
+
+#print odd_product_formula'

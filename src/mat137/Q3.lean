@@ -44,6 +44,7 @@ exact dvd_mul_of_dvd_left this_1 (d + 1),
 exact dvd_mul_of_dvd_right this_1 d,
 end
 
+-- Q3 full proof
 example (n : ℤ) : 6 ∣ n^3 + 5*n := begin
 cases n,
 have := Q3_nat n,
