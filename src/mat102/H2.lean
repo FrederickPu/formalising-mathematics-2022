@@ -139,5 +139,24 @@ simp,
 rw ← this,
 refl,
 end
--- Q3
+
+example {n : ℕ} (β : Type v) [decidable_eq β] (f g : (fin n) → β):
+(list.fin_range n).all (λ x, f x = g x) → f = g := begin
+intro h,
+suffices : (list.fin_range n).all₂ (λ x, f x = g x),
+{
+  have := list.all₂_iff_forall.mp this,
+  ext x,
+  specialize this x,
+  simp at this,
+  exact this,
+},
+
+have := list.all_iff_all₂ (list.fin_range n) (λ x, if (f x = g x) then tt else ff),
+simp [list.all, if_pos] at this,
+rw bruh at this,
+rw ← this,
+
+exact h, 
+end
 #check set.Icc
