@@ -67,7 +67,7 @@ specialize this 1,
 tauto,
 end
 
--- Q3 a)
+-- Q3
 example : (λ x:ℝ, (1 + x^2)/x^2) '' (set.univ \ {(0: ℝ)}) = {x : ℝ | 1 < x}  := begin
 ext y,
 simp,
