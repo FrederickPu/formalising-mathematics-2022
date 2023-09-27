@@ -159,4 +159,213 @@ rw ← this,
 
 exact h, 
 end
+
+-- this mat137 induction stuff
+example (n : ℕ) (x : ℝ) (hx : x > 0): (1 + x)^(n+2) > 1 + (n+2:ℕ)*x := begin
+induction n with k hk,
+simp,
+suffices : x^2 > 0, linarith,
+exact pow_pos hx 2,
+
+have : k.succ + 2 = (k + 2) + 1, ring,
+rw this,
+let w := k + 2,
+have l : w = k + 2, refl,
+rw ← l, rw ← l at hk,
+
+rw pow_add,
+have u : 1 + x  > 0, linarith,
+have := (mul_lt_mul_right u).mpr hk,
+simp at this,
+end
 #check set.Icc
+
+#check field
+#check subfield
+
+class MyField (F : Type u) extends has_zero F, has_one F, has_add F, has_mul F, has_inv F, has_neg F :=
+(nontrivial : (0:F) ≠ 1)
+(mul_assoc (a b c : F) : a * (b*c) = (a*b)*c)
+(add_assoc (a b c : F) : a + (b + c) = (a + b) + c)
+(mul_comm (a b : F) : a * b = b * a)
+(add_comm (a b : F) : a + b = b + a)
+(add_zero (a : F) : a + 0 = a)
+(mul_one (a : F) : a * 1 = a)
+(mul_inv (a : F) : a ≠ 0 → a * a⁻¹ = 1)
+(add_neg (a : F) : a + (-a) = 0)
+(distrib (a b c : F) : a*(b+c) = a*b + a*c)
+
+
+variables {F : Type u} [MyField F]
+
+namespace MyField
+
+-- Q4
+theorem mul_canc (a b c : F) : a ≠ 0 → a*b = a*c → b = c  := begin
+intro ha,
+intro h,
+-- only rewrite LHS 
+-- basically emulating the equation chain proofs mat102 likes so much
+conv
+{
+  to_lhs,
+  rw ← mul_one b,
+  rw ← mul_inv a ha,
+  rw mul_assoc,
+  rw mul_comm b a,
+  rw h,
+  rw mul_comm _ a⁻¹,
+  rw mul_assoc,
+  rw mul_comm _ a,
+  rw mul_inv _ ha,
+  rw mul_comm,
+  rw mul_one,
+},
+end
+
+--Q5
+lemma zero_unique (a b : F) :a + b = a → b = 0 := begin
+intro h,
+-- again another equality chain (left to right)
+conv {
+  to_lhs,
+  rw ← add_zero b,
+  rw ← add_neg a,
+  rw add_assoc,
+  rw add_comm b a,
+  rw h,
+  rw add_neg,
+},
+end
+lemma neg_unique (a b : F) : a + b = 0 → b = -a := begin
+intro h,
+conv {
+  to_lhs,
+  rw ← add_zero b,
+  rw ← add_neg a,
+  rw add_assoc,
+  rw add_comm b a,
+  rw h,
+  rw add_comm,
+  rw add_zero, 
+},
+end
+theorem one_mul_zero : (1:F) * 0 = 0 := begin
+have : (1:F) + (1*0) = 1,
+have : (1:F)*1 + (1*0) = 1 + (1*0), rw mul_one, 
+rw ← this,
+rw ← distrib,
+rw add_zero,
+rw mul_one,
+
+apply zero_unique (1:F) (1*0),
+exact this,
+end
+
+theorem zero_mul_zero : (0 : F) * 0 = 0  := begin
+apply zero_unique (0*1:F),
+conv {
+  to_lhs,
+  rw ← distrib,
+  rw add_zero,
+},
+end
+
+theorem mul_zero (a : F) : a * 0 = 0 := begin
+have l : -a*0 = -(a*0),
+apply neg_unique,
+conv {
+  to_lhs,
+  rw mul_comm a 0, rw mul_comm (-a) 0,
+  rw ← distrib,
+  rw add_neg,
+  rw zero_mul_zero,
+},
+rw ← add_zero (a*0),
+have : a * 0 + 0 = a*0 + (a*0 + -(a*0)),
+rw add_neg,
+
+conv {
+to_lhs,
+rw this,
+rw ← l,
+rw add_assoc,
+rw ← distrib,
+rw add_zero,
+rw [mul_comm a 0, mul_comm (-a) 0],
+rw ← distrib,
+rw add_neg,
+rw zero_mul_zero,
+},
+end
+
+-- 
+example (x : F) : x*x = 1 → x ∈ ({(-1:F), (1:F)} : set F) := begin
+intro h,
+have h : x*x + (-1) = 1 + (-1),
+rw h,
+rw add_neg at h,
+have : x * x + -1  = (x + 1)*(x + (-1)),
+conv {
+to_lhs,
+rw ← add_zero (x*x),
+rw ← mul_zero x,
+rw ← add_neg (1:F),
+rw distrib,
+rw add_assoc,
+rw ← distrib x,
+rw ← add_assoc,
+},
+have : x*(-1) + (-1) = (-1)*x + (-1)*1,
+rw mul_one, rw mul_comm,
+
+conv {
+  to_lhs,
+  rw this,
+  rw ← distrib,
+  rw mul_comm (-1) (x+1),
+  rw mul_comm x (x+1),
+  rw ← distrib,
+},
+
+rw this at h,
+suffices : x + 1 = 0 ∨ x + (-1) = 0,
+cases this,
+{
+  have : x = -1,
+  conv {
+    to_lhs,
+    rw ← add_zero x,
+    rw ← add_neg (1:F),
+    rw add_assoc,
+    rw this_1,
+    rw add_comm,
+    rw add_zero,
+  },
+  rw this, simp,
+},
+{
+  have : x = 1,
+  conv {
+    to_lhs,
+    rw ← add_zero x,
+     rw ←add_neg (1:F),
+     rw add_comm (1:F) (-1),
+     rw add_assoc,
+     rw this_1,
+     rw add_comm,
+     rw add_zero,
+  },
+  rw this, simp,
+},
+
+cases em (x + 1 = 0),
+left, exact h_1,
+rw ← mul_zero (x + 1) at h,
+right,
+apply mul_canc (x+1),
+exact h_1,
+exact h,
+end
+
+end MyField
