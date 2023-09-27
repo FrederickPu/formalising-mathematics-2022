@@ -360,12 +360,16 @@ cases this,
 },
 
 cases em (x + 1 = 0),
-left, exact h_1,
-rw ← mul_zero (x + 1) at h,
-right,
-apply mul_canc (x+1),
-exact h_1,
-exact h,
+{
+  left, exact h_1,
+},
+{
+  rw ← mul_zero (x + 1) at h,
+  right,
+  apply mul_canc (x+1),
+  exact h_1,
+  exact h,
+},
 end
 
 end MyField
