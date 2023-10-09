@@ -4,10 +4,7 @@ import analysis.special_functions.trigonometric.basic
 #check real.pi
 
 def Mfar (M : ℝ) (f g : ℝ → ℝ) := ∃ x : ℝ, ∀ y : ℝ, x < y → |f y - g y| ≥ M 
-def Mfar' (M : ℝ) (f g : ℝ → ℝ) := ∃ x : ℝ, ∀ y : ℝ, y < x → |f y - g y| ≥ M 
-
 def Msep (M : ℝ) (f g : ℝ → ℝ) := ∀ x : ℝ, ∃ y : ℝ, x < y ∧ |f y - g y| ≥ M 
-def Msep' (M : ℝ) (f g : ℝ → ℝ) := ∀ x : ℝ, ∃ y : ℝ, y <x ∧ |f y - g y| ≥ M 
 
 theorem temp (M : ℝ) (f g : ℝ → ℝ) : Msep M f g ↔ Msep' M f g := begin
 rw [Msep, Msep'],

@@ -372,4 +372,126 @@ cases em (x + 1 = 0),
 },
 end
 
+inductive F5 
+| zero : F5
+| one : F5
+| a : F5
+| b : F5
+| c : F5
+
+namespace F5
+instance : has_one F5 := ⟨one⟩
+instance : has_zero F5 := ⟨zero⟩
+
+def to_fin5 (x : F5) : fin 5 :=
+x.cases_on 0 1 2 3 4
+def to_F5 : fin 5 → F5 := ![zero, one, a, b, c]
+
+instance : has_coe F5 (fin 5) := ⟨to_fin5⟩
+instance : has_coe (fin 5) F5 := ⟨to_F5⟩
+def my_add : fin 5 → fin 5 → fin 5 :=
+![![0, 1, 2, 3, 4],
+![1, 2, 3, 4, 0],
+![2, 3, 4, 0, 1],
+![3, 4, 0, 1, 2],
+![4, 0, 1, 2, 3]]
+
+def my_mul : fin 5 → fin 5 → fin 5 := 
+![
+![0, 0, 0, 0, 0],
+![0, 1, 2, 3, 4],
+![0, 2, 4, 1, 3],
+![0, 3, 1, 4, 2],
+![0, 4, 3, 2, 1]]
+
+def add : F5 → F5 → F5 := λ x, λ y, my_add x y 
+def mul : F5 → F5 → F5 := λ x, λ y, my_mul x y
+
+instance : has_repr F5 := {
+  repr := λ x, F5.cases_on x "0" "1" "a" "b" "c" 
+}
+instance : has_add F5 := ⟨add⟩ 
+instance : has_mul F5 := ⟨mul⟩
+instance : has_neg F5 := ⟨λ x, ![0, 4, 3, 2, 1] x⟩
+instance : has_inv F5 := ⟨λ x, ![0, 1, 3, 2, 4] x⟩
+
+
+
+#eval zero + -zero
+instance : MyField F5 := {
+  nontrivial := begin
+    simp only [has_one.one, has_zero.zero],
+    simp only [ne.def, not_false_iff],
+  end,
+  mul_assoc := begin
+    intros a b c,
+    induction a;
+    {
+      induction b; {
+        induction c;
+        refl,
+      },
+    },
+  end,
+  add_assoc := begin
+    intros a b c,
+      induction a;
+      {
+        induction b; {
+          induction c;
+          refl,
+        },
+      },
+  end,
+  mul_comm := begin
+    intros a b,
+    induction a; 
+    {
+      induction b;
+      refl,
+    },
+  end,
+  add_comm := begin
+    intros a b,
+    induction a; 
+    {
+      induction b;
+      refl,
+    },
+  end,
+  add_zero := begin
+    intro a,
+    induction a;
+    refl,
+  end,
+  mul_one := begin
+    intro a,
+    induction a;
+    refl,
+  end,
+  mul_inv := begin
+    intro a,
+    induction a,
+    
+  end,
+  add_neg := begin
+    intro a, 
+    induction a;
+    {
+      refl,
+    },
+  end,
+  distrib := begin
+    intros a b c,
+    induction a;
+    {
+      induction b;
+      {
+        induction c;
+        refl,
+      },
+    },
+  end
+}
+end F5
 end MyField

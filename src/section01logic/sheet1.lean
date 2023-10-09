@@ -59,16 +59,16 @@ end
 -- Assume `Q` is true. Prove that `P → Q`. 
 example (hQ : Q) : P → Q :=
 begin
-intro p,
-exact hQ,
+intro hP,
+exact hQ, 
 
 end
 
 -- Assume `P → Q` and `P` is true. Deduce `Q`.
 example (h : P → Q) (hP : P) : Q :=
 begin
-  apply h, 
-  exact hP,
+apply h,
+exact hP,
 end
 
 /-
@@ -84,7 +84,7 @@ using `intro`, `exact` and `apply`.
 example : P → P :=
 begin
   intro l,
-  
+  exact l,
 end
 
 /-
@@ -104,21 +104,31 @@ So the next level is asking you prove that `P → (Q → P)`.
 -/
 example : P → Q → P :=
 begin
-  
+  intro hP,
+  intro hQ,
+  exact hP,
 end
 
 /-- If we know `P`, and we also know `P → Q`, we can deduce `Q`. 
 This is called "Modus Ponens" by logicians. -/
 example : P → (P → Q) → Q :=
 begin
-  sorry
+  intro hP,
+  intro hPQ,
+  apply hPQ,
+  exact hP,
 end
 
 /-- `→` is transitive. That is, if `P → Q` and `Q → R` are true, then
   so is `P → R`. -/
 example : (P → Q) → (Q → R) → (P → R) :=
 begin
-  sorry,
+  intro hPQ,
+  intro hQR,
+  intro hP,
+  apply hQR,
+  apply hPQ,
+  exact hP,
 end
 
 -- If `h : P → Q → R` with goal `⊢ R` and you `apply h`, you'll get

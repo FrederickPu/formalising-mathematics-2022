@@ -81,3 +81,7 @@ def whoops := (list.fin_range 5).map $ λ x, (list.fin_range 5).map $ λ y, (lis
 #eval (list.fin_range 5).map $ λ x, list.filter (λ y : fin 5, my_add x y = 0) (list.fin_range 5) 
 #eval (list.fin_range 5).map $ λ x, list.filter (λ y : fin 5, my_mul x y = 1) (list.fin_range 5) 
 #check list.filter
+
+#check fintype.card
+
+#check comm_group
