@@ -115,3 +115,40 @@ apply mul_pos,
 linarith,
 linarith,
 end
+
+example (f : ℝ → ℝ) (L : ℝ): ∀ c > 0, (limit f 0 L) → (limit (λ x, 7 * f (c*x)) 0 (7*L)) := begin
+intros c hc,
+intro h,
+
+intros ε he,
+specialize h (ε / 7) (by linarith),
+rcases h with ⟨δ1, Hd, h⟩,
+use (δ1/c), use div_pos Hd hc, 
+intros x hx,
+specialize h (c*x),
+have h := h _,
+simp,
+have : 7* f (c * x) - 7 * L = 7*(f (c*x) - L), ring,
+rw this,
+rw abs_mul,
+have w : (7:ℝ) > 0, linarith,
+rw abs_of_pos w,
+linarith,
+
+{
+  ring_nf at hx,
+  split,
+  ring_nf,
+  rw abs_mul,
+  apply mul_pos,
+  exact hx.left,
+  exact abs_pos_of_pos hc,
+
+  have := (mul_lt_mul_right hc).mpr hx.right,
+  have l := norm_num.ne_zero_of_pos c hc,
+  field_simp at this,
+  ring_nf,
+  rw [abs_mul, abs_of_pos hc],
+  exact this,
+},
+end
