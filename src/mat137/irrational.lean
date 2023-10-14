@@ -152,3 +152,56 @@ linarith,
   exact this,
 },
 end
+
+example : ∃ f : ℝ → ℝ, ¬(∀ c ≠ (1 : ℝ), ∀ L : ℝ, (limit f 1 L) → (limit (λ x, 7 * f (c*x)) 1 (7*L))) := begin
+use λ x, x,
+simp only [not_forall, exists_prop],
+use 2, use (by linarith),
+use 1, -- L = 1
+split,
+{ -- limit exists
+  intros ε he,
+  use ε, use he,
+  intros x hx,
+  simp,
+  exact hx.right,  
+}, 
+{ -- other limit is false
+  rw limit,
+  simp only [not_forall, not_exists],
+  use (1/2), use (by linarith),
+  intros δ hd,
+  use (1 + min (1/2) (δ/2)),
+  split,
+  split, { -- 0 <
+    cases min_cases (1/2) (δ/2),
+    rw h.left, norm_num,
+    rw h.left,
+    rw abs_pos,
+    linarith,
+  },
+  { -- < δ 
+    ring,
+    rw abs_of_pos,
+    rw min_lt_iff,
+    right,
+    linarith,
+
+    rw lt_min_iff,
+    split,
+    linarith,
+    linarith,
+  },
+  { -- ≥ ε
+    have : 0 < min (1 / 2) (δ/2),
+      rw lt_min_iff,
+      exact ⟨by linarith, by linarith⟩,
+    rw abs_of_pos,
+    linarith,
+
+    linarith,
+  },
+}
+end
+
+#check finset
