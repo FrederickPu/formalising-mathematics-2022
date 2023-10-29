@@ -43,6 +43,7 @@ class MyField (F : Type*) [has_zero F] [has_one F] extends has_add F, has_mul F,
 (mul_inv (a : F) : a ≠ 0 → a * a⁻¹ = 1)
 (add_neg (a : F) : a + (-a) = 0)
 (distrib (a b c : F) : a*(b+c) = a*b + a*c)
+(inv_zero : (0 : F)⁻¹ = 0)
 
 namespace MyField
 
@@ -249,43 +250,105 @@ conv {
 rw l at this,
 rw h at this,
 end
+
+instance [MyField F4] : field F4 := {
+  add := ‹MyField F4›.add,
+  add_assoc := λ a b c, (‹MyField F4›.add_assoc a b c).symm,
+  zero := 0, -- inherited from F4
+  zero_add := begin
+    intro a,
+    rw add_comm,
+    exact add_zero a,
+  end,
+  add_zero := add_zero,
+  neg := λ a, -a, 
+  add_left_neg := begin
+    intro a,
+    have : (-a) + a = 0,
+      rw add_comm,
+      exact add_neg a,
+    exact this,
+  end,
+  add_comm := add_comm,
+  one := 1,
+  mul := λ a b, a*b,
+  mul_assoc := λ a b c, (‹MyField F4›.mul_assoc a b c).symm,
+  one_mul := begin
+    intro a,
+    rw mul_comm,
+    exact mul_one a,
+  end,
+  mul_one := mul_one,
+  left_distrib := distrib,
+  right_distrib := begin
+  intros a b c,
+  rw [mul_comm (a + b) c, mul_comm a c, mul_comm b c],
+  exact distrib c a b,
+  end,
+  mul_comm := mul_comm,
+  inv := λ a, a⁻¹,
+  exists_pair_ne := begin
+  use 0, use 1,
+  end,
+  mul_inv_cancel := mul_inv,
+  inv_zero := inv_zero
+}
+
+example (α )
+
+example [MyField F4] : (1 : F4) + 1 = F4.a → false := begin
+intro h,
+have : 1 + F4.b*F4.b*F4.b = F4.b*F4.b,
+rw b_cube, rw b_sq, exact h,
+have : 1 + (F4.b)^3 = F4.b^2,
+ring_nf at this, rw ← this, ring,
+have w : (1 + (F4.b)^3) - F4.b^3 = F4.b^2 - F4.b^3,
+rw this,
+ring_nf at w,
+have : (-1) *F4.b = -F4.b, ring,
+rw mul_comm ((-1)*F4.b + 1) (F4.b^2) at w,
+have l : ((-1)*F4.b + 1)= (F4.a - 1 - F4.b),
+rw ← h, ring,
+rw l at w,
+end
 example [MyField F4] : (1:F4) + 1 = 0 := begin
-suffices : F4.a * F4.a * F4.a + 1 = 0,
-rw [a_cube] at this,
-exact this,
+suffices : F4.a * F4.a*F4.a + 1 
+-- suffices : F4.a * F4.a * F4.a + 1 = 0,
+-- rw [a_cube] at this,
+-- exact this,
 
-have : (F4.a + 1) * (F4.a*F4.a + -F4.a + 1) = F4.a*F4.a*F4.a + 1,
-conv {
-to_lhs,
+-- have : (F4.a + 1) * (F4.a*F4.a + -F4.a + 1) = F4.a*F4.a*F4.a + 1,
+-- conv {
+-- to_lhs,
 
-rw distrib,
-rw distrib,
-rw mul_comm,
-rw distrib,
-rw mul_comm _ (-F4.a),
-rw distrib,
-rw mul_comm _ (1:F4),
-rw ← add_assoc (F4.a*F4.a*F4.a),
-rw add_assoc (1*(F4.a * F4.a)), 
-rw mul_assoc,
+-- rw distrib,
+-- rw distrib,
+-- rw mul_comm,
+-- rw distrib,
+-- rw mul_comm _ (-F4.a),
+-- rw distrib,
+-- rw mul_comm _ (1:F4),
+-- rw ← add_assoc (F4.a*F4.a*F4.a),
+-- rw add_assoc (1*(F4.a * F4.a)), 
+-- rw mul_assoc,
 
-rw ← mul_assoc 1 F4.a,
-rw mul_comm 1 (F4.a*F4.a),
-rw mul_one,
-rw ← left_distrib _ _ F4.a,
-rw add_neg,
-rw mul_comm 0 F4.a,
-rw mul_zero,
-rw [mul_one, mul_one],
-rw add_comm (0:F4),
-rw add_zero,
-rw add_assoc,
-rw ← add_assoc _ (-F4.a) F4.a, 
-rw add_comm (-F4.a) F4.a,
-rw add_neg,
-rw add_zero,
-},
-rw ← this,
-rw a_sq,
+-- rw ← mul_assoc 1 F4.a,
+-- rw mul_comm 1 (F4.a*F4.a),
+-- rw mul_one,
+-- rw ← left_distrib _ _ F4.a,
+-- rw add_neg,
+-- rw mul_comm 0 F4.a,
+-- rw mul_zero,
+-- rw [mul_one, mul_one],
+-- rw add_comm (0:F4),
+-- rw add_zero,
+-- rw add_assoc,
+-- rw ← add_assoc _ (-F4.a) F4.a, 
+-- rw add_comm (-F4.a) F4.a,
+-- rw add_neg,
+-- rw add_zero,
+-- },
+-- rw ← this,
+-- rw a_sq,
 end
 end MyField

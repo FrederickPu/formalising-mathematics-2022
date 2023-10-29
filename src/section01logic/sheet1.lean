@@ -60,8 +60,7 @@ end
 example (hQ : Q) : P → Q :=
 begin
 intro hP,
-exact hQ, 
-
+exact hQ,
 end
 
 -- Assume `P → Q` and `P` is true. Deduce `Q`.
@@ -83,8 +82,6 @@ using `intro`, `exact` and `apply`.
 /-- Every proposition implies itself. -/
 example : P → P :=
 begin
-  intro l,
-  exact l,
 end
 
 /-
@@ -135,7 +132,7 @@ end
 -- two goals! Note that tactics operate on only the first goal.
 example : (P → Q → R) → (P → Q) → (P → R) :=
 begin
-  sorry
+  
 end
 
 /- 

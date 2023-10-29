@@ -25,3 +25,5 @@ rw ← @real.sq_sqrt ((b^2 - 4 * a * c) / (4 * a^2)) _ at h,
 have := eq_or_eq_neg_of_sq_eq_sq _ _ h,
 
 end
+
+#check prod.dv

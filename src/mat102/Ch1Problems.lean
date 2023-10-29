@@ -1,6 +1,7 @@
 import tactic
 import data.real.sqrt
 
+#check ring
 theorem ch1_1_8_a (a b : ℝ) : a > 0 → b > 0 → a + b ≤ 1/2 → ((1 - a)/a)* ((1 - b)/b) ≥ 1 := begin
 intros ha hb h,
 have pa : a ≤ 1 - a, linarith,
