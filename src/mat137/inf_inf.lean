@@ -44,20 +44,23 @@ example (f : ℝ → ℝ) :
  intros hfC hR hI f12,
  specialize hR 1 (by linarith),
  rcases hR with ⟨δ, hd, H⟩,
- specialize H (min (δ / 2 + 7) 8),
- have := min_le_left (δ / 2 + 7) 8,
- simp at H,
- specialize H (by linarith) (by linarith) (by {
-  cases min_cases (δ / 2 + 7) 8,
-  linarith [h.left],
-  linarith [h.left],
- }),
- have crux1 : f (min (δ / 2 + 7) 8) < 1, exact lt_of_abs_lt H,
+ have crux1 : f (min (δ / 2 + 7) 8) < 1,
+ {
+  specialize H (min (δ / 2 + 7) 8),
+  have := min_le_left (δ / 2 + 7) 8,
+  simp at H,
+  specialize H (by linarith) (by linarith) (by {
+    cases min_cases (δ / 2 + 7) 8,
+    linarith [h.left],
+    linarith [h.left],
+  }),
+    exact lt_of_abs_lt H,
+ },
 
  specialize hI 1 (by linarith),
  rcases hI with ⟨M, hM, H'⟩,
  specialize H' (max (M + 1) 20) (by linarith [le_max_left (M+1) 20]),
- have : f (max (M + 1) 20) < 2 := by linarith [lt_of_abs_lt H'],
+ have crux2 : f (max (M + 1) 20) < 2 := by linarith [lt_of_abs_lt H'],
 
  have subset1 : set.Ioo (min (δ / 2 + 7) 8) 12 ⊆ set.Ioi (-7 : ℝ), {
   intros x hx,
@@ -72,7 +75,8 @@ example (f : ℝ → ℝ) :
   linarith, linarith,
  }),
 
- have subset2 : set.Ioo 12 (max (M + 1) 20) ⊆ set.Ioi (-7 : ℝ), {
+ have subset2 : set.Ioo 12 (max (M + 1) 20) ⊆ set.Ioi (-7 : ℝ), 
+ {
   intros x hx,
   simp at hx,
   simp,
@@ -88,8 +92,8 @@ example (f : ℝ → ℝ) :
  rcases ivt2 with ⟨y, hy, Hy⟩,
  use x, use subset1 hx,
  use y, use subset2 hy,
- simp at hx, simp at hy, 
  split,
+ simp at hx, simp at hy, 
  linarith,
 
  exact ⟨Hx, Hy⟩,
