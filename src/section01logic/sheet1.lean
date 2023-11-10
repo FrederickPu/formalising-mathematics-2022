@@ -82,6 +82,8 @@ using `intro`, `exact` and `apply`.
 /-- Every proposition implies itself. -/
 example : P → P :=
 begin
+intro h,
+exact h,
 end
 
 /-

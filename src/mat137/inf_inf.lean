@@ -17,6 +17,7 @@ intro h1,
 intros x hx,
 exact h1 x (hCD hx),
 end
+#check real
 
 example (f g : ℝ → ℝ) (a : ℝ) (h1 : f ≤ g) (h2 : approach_neg_inf g a): (approach_neg_inf f a) := begin
 intros M hM,
@@ -127,8 +128,7 @@ example (f : ℝ → ℝ) :
  rcases evt with ⟨x, hx, Hx⟩,
  use x, use subset3 hx, 
 
- intro y,
- intro hy,
+ intros y hy,
  cases em (y ∈ set.Icc (min (δ / 2 - 7) (-6)) (max (M + 1) 20)),
  specialize Hx y,
  exact Hx h,

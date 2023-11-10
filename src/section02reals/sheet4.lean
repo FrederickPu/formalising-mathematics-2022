@@ -52,12 +52,13 @@ see if you can start beginning to guess what various lemmas should be called.
 
 example (x : ℝ) : |(-x)| = |x| :=
 begin
-  sorry
+  simp only [abs_neg],
 end
 
 example (x y : ℝ) : |x - y| = |y - x| :=
 begin
-  sorry
+  rw ← abs_neg,
+  ring,
 end 
 
 example (A B C : ℕ) : max A B ≤ C ↔ A ≤ C ∧ B ≤ C :=
